@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>neuefische DS&AI — Daily Quiz</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --surface2: #1e2230;
+    --border: #2a2f3e;
+    --accent: #00e5a0;
+    --accent2: #ff6b6b;
+    --accent3: #ffd166;
+    --text: #e8eaf2;
+    --muted: #6b7280;
+    --correct: #00e5a0;
+    --wrong: #ff6b6b;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #0d0f14;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+  }
+
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 6px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #00bcd4);
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Score display */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem 1.2rem;
+    margin-bottom: 2rem;
+    font-size: 0.88rem;
+  }
+
+  .score-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .score-label { color: var(--muted); }
+
+  /* Question card */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.2s;
+  }
+
+  .question-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .topic-tag {
+    font-size: 0.7rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  .tag-datetime {
+    background: rgba(0, 229, 160, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(0, 229, 160, 0.3);
+  }
+
+  .tag-combining {
+    background: rgba(255, 209, 102, 0.12);
+    color: var(--accent3);
+    border: 1px solid rgba(255, 209, 102, 0.3);
+  }
+
+  .q-number {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-left: auto;
+  }
+
+  .question-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  code {
+    font-family: 'Space Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.15em 0.45em;
+    border-radius: 5px;
+    font-size: 0.88em;
+    color: #a5f3d0;
+  }
+
+  pre code {
+    display: block;
+    padding: 1rem;
+    margin: 0.8rem 0;
+    overflow-x: auto;
+    line-height: 1.6;
+    font-size: 0.82rem;
+    border-radius: 8px;
+    white-space: pre;
+  }
+
+  /* Options */
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 0.9rem 1.2rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    transition: all 0.18s ease;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0, 229, 160, 0.05);
+    transform: translateX(3px);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+    background: var(--border);
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+    transition: all 0.18s;
+  }
+
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(0, 229, 160, 0.08);
+  }
+
+  .option-btn.correct .option-letter {
+    background: var(--correct);
+    color: #0d0f14;
+  }
+
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(255, 107, 107, 0.08);
+  }
+
+  .option-btn.wrong .option-letter {
+    background: var(--wrong);
+    color: #fff;
+  }
+
+  .option-btn.reveal-correct {
+    border-color: rgba(0, 229, 160, 0.4);
+    background: rgba(0, 229, 160, 0.04);
+  }
+
+  .option-btn.reveal-correct .option-letter {
+    background: rgba(0, 229, 160, 0.3);
+    color: var(--correct);
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 1.2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 9px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    display: none;
+    animation: slideIn 0.25s ease;
+  }
+
+  .feedback.show { display: block; }
+
+  .feedback.correct-fb {
+    background: rgba(0, 229, 160, 0.07);
+    border: 1px solid rgba(0, 229, 160, 0.25);
+    color: #a5f3d0;
+  }
+
+  .feedback.wrong-fb {
+    background: rgba(255, 107, 107, 0.07);
+    border: 1px solid rgba(255, 107, 107, 0.25);
+    color: #ffc5c5;
+  }
+
+  .feedback-icon {
+    font-size: 1.1rem;
+    margin-right: 0.4rem;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Navigation */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.7rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d0f14;
+  }
+
+  .btn-primary:hover { background: #00c98b; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Results screen */
+  #results-screen {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    animation: slideIn 0.35s ease;
+  }
+
+  .result-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-label {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+  }
+
+  .result-breakdown {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .result-stat {
+    text-align: center;
+  }
+
+  .result-stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .result-stat-num.good { color: var(--correct); }
+  .result-stat-num.bad { color: var(--wrong); }
+
+  .result-stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  .result-msg {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto 2rem;
+  }
+
+  /* Topic summary dots */
+  .topic-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .dot.answered-correct { background: var(--correct); }
+  .dot.answered-wrong { background: var(--wrong); }
+  .dot.unanswered { background: var(--border); }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">neuefische · DS &amp; AI Bootcamp</div>
+    <h1>Daily <span>Knowledge</span> Check</h1>
+    <p class="subtitle">Datetime Variables &amp; Combining DataFrames — Pandas / Python</p>
+  </header>
+
+  <div id="quiz-screen">
+    <div class="score-bar">
+      <span class="score-number" id="live-score">0</span>
+      <span class="score-label">points</span>
+      <div style="margin-left:auto; display:flex; align-items:center; gap:0.8rem;">
+        <span class="topic-tag tag-datetime">datetime</span>
+        <span class="topic-tag tag-combining">combining</span>
+      </div>
+    </div>
+
+    <div class="progress-label">
+      <span id="q-counter">Question 1 of 10</span>
+      <span id="pct-label">0%</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <div class="question-card" id="question-card">
+      <div class="question-meta">
+        <span class="topic-tag" id="topic-tag">datetime</span>
+        <span class="q-number" id="q-number">01 / 10</span>
+      </div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-ghost" id="prev-btn" onclick="navigate(-1)">← Prev</button>
+      <div class="topic-dots" id="nav-dots"></div>
+      <button class="btn btn-primary" id="next-btn" onclick="navigate(1)">Next →</button>
+    </div>
+
+    <div style="text-align:center; margin-top:2rem;">
+      <button class="btn btn-ghost" onclick="showResults()" style="font-size:0.72rem;">See Results</button>
+    </div>
+  </div>
+
+  <div id="results-screen">
+    <div class="result-score" id="final-score-num">—</div>
+    <div class="result-label">out of <span id="total-qs">10</span> questions</div>
+    <div class="result-breakdown">
+      <div class="result-stat">
+        <div class="result-stat-num good" id="correct-count">—</div>
+        <div class="result-stat-label">Correct ✓</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-num bad" id="wrong-count">—</div>
+        <div class="result-stat-label">Wrong ✗</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-num" style="color:var(--muted)" id="skip-count">—</div>
+        <div class="result-stat-label">Skipped</div>
+      </div>
+    </div>
+    <div class="result-msg" id="result-msg"></div>
+    <button class="btn btn-primary" onclick="resetQuiz()">Try Again ↺</button>
+    <hr class="section-divider">
+    <p style="color:var(--muted); font-size:0.8rem;">Answer history</p>
+    <div class="topic-dots" id="result-dots" style="margin-top:1rem;"></div>
+  </div>
+
+</div>
+
+<script>
+const QUESTIONS = [
+  // Q1 — correct: A (index 0)
+  {
+    topic: "datetime",
+    text: "What does <code>datetime.weekday()</code> return for a <strong>Monday</strong>?",
+    options: [
+      "0",
+      "1",
+      "7",
+      "It returns the string <code>'Monday'</code>"
+    ],
+    correct: 0,
+    explanation: "<code>.weekday()</code> uses 0-based indexing: <strong>Monday = 0</strong>, Sunday = 6. Compare with <code>.isoweekday()</code> which uses Monday = 1, Sunday = 7. Both are useful for detecting weekday vs weekend patterns."
+  },
+  // Q2 — correct: C (index 2)
+  {
+    topic: "combining",
+    text: "What does <code>pd.concat([df_a, df_b], axis=1)</code> do?",
+    options: [
+      "Stacks the rows of <code>df_b</code> below <code>df_a</code>",
+      "Performs an inner join on all shared columns",
+      "Places <code>df_b</code>'s columns next to <code>df_a</code>'s, aligned by index",
+      "Merges the DataFrames on their first column"
+    ],
+    correct: 2,
+    explanation: "<code>axis=1</code> means stack along the <strong>column axis</strong> — new columns are added side by side, with rows aligned by index. <code>axis=0</code> (the default) stacks rows vertically."
+  },
+  // Q3 — correct: D (index 3)
+  {
+    topic: "datetime",
+    text: "You subtract two <code>datetime</code> objects and get <code>365 days, 3600 seconds</code>. How many total hours is this?",
+    options: [
+      "8760.5 hours",
+      "8764 hours",
+      "8760 hours",
+      "8761 hours"
+    ],
+    correct: 3,
+    explanation: "365 days × 24 = 8760 hours, plus 3600 seconds ÷ 3600 = 1 more hour. Total: <strong>8761 hours</strong>. You can compute this directly with <code>duration / timedelta(hours=1)</code>."
+  },
+  // Q4 — correct: B (index 1)
+  {
+    topic: "combining",
+    text: "An <strong>inner merge</strong> of two DataFrames returns fewer rows than either original. Why?",
+    options: [
+      "It silently drops rows with any NaN values before merging",
+      "It only keeps rows where the key value exists in <em>both</em> DataFrames",
+      "It removes duplicate columns from both sides",
+      "It applies a default numeric filter to reduce the result"
+    ],
+    correct: 1,
+    explanation: "An inner join keeps <strong>only rows whose key appears in both DataFrames</strong>. Any row whose key is missing from one side is dropped entirely. Use <code>how='outer'</code> to retain all rows."
+  },
+  // Q5 — correct: A (index 0)
+  {
+    topic: "datetime",
+    text: "You load a CSV and the <code>date</code> column has dtype <code>object</code>. What must you do before extracting date components from it?",
+    options: [
+      "Convert it with <code>pd.to_datetime(df['date'])</code> so it becomes <code>datetime64</code>",
+      "Sort the column first — Pandas infers the type after sorting",
+      "Cast it with <code>.astype(float)</code> and then back to string",
+      "Nothing — the <code>.dt</code> accessor works on string columns too"
+    ],
+    correct: 0,
+    explanation: "An <code>object</code> dtype column is just plain strings. You <strong>must</strong> call <code>pd.to_datetime()</code> to convert it to <code>datetime64</code> before using the <code>.dt</code> accessor or doing any date arithmetic."
+  },
+  // Q6 — correct: C (index 2)
+  {
+    topic: "combining",
+    text: "You call <code>pd.concat([df_a, df_b])</code> and notice the result has duplicate index values. What caused this?",
+    options: [
+      "The two DataFrames have different column names",
+      "<code>pd.concat()</code> always creates a new index starting from 0",
+      "Both DataFrames had their own 0-based integer indices, which are preserved",
+      "One of the DataFrames was empty"
+    ],
+    correct: 2,
+    explanation: "<code>pd.concat()</code> preserves the original indices by default. If both DataFrames use indices 0, 1, 2… the result will have duplicates. Fix it with <code>ignore_index=True</code> to get a clean sequential index."
+  },
+  // Q7 — correct: D (index 3)
+  {
+    topic: "datetime",
+    text: "Which format string correctly parses the date string <code>'2021-05-14'</code> with <code>strptime()</code>?",
+    options: [
+      "<code>'%d-%m-%Y'</code>",
+      "<code>'%B-%d-%Y'</code>",
+      "<code>'%m/%d/%Y'</code>",
+      "<code>'%Y-%m-%d'</code>"
+    ],
+    correct: 3,
+    explanation: "The string <code>'2021-05-14'</code> is in ISO format: year first, then month, then day, all zero-padded and separated by dashes. That maps to <code>'%Y-%m-%d'</code>. <code>%B</code> is for full month names like 'April', not numbers."
+  },
+  // Q8 — correct: A (index 0)
+  {
+    topic: "combining",
+    text: "What is the key difference between <code>df.join()</code> and <code>pd.merge()</code>?",
+    options: [
+      "<code>df.join()</code> aligns on the <strong>index</strong>; <code>pd.merge()</code> joins on a <strong>shared column</strong>",
+      "<code>pd.merge()</code> can only perform inner joins",
+      "<code>df.join()</code> stacks rows; <code>pd.merge()</code> stacks columns",
+      "They are identical — one is just an alias for the other"
+    ],
+    correct: 0,
+    explanation: "<code>df.join()</code> uses the <strong>row index</strong> to align — ideal when both DataFrames share the same index. <code>pd.merge()</code> matches rows by <strong>column values</strong> (like a SQL JOIN on a key column such as customer ID)."
+  },
+  // Q9 — correct: C (index 2)
+  {
+    topic: "combining",
+    text: "You have two weather DataFrames with the same columns. <code>mean_df</code> has <strong>12 rows</strong> (one per month) and <code>max_df</code> has <strong>4 rows</strong> (only 4 months). You want to merge them on the <code>'Month'</code> column <strong>without losing any rows from either DataFrame</strong>. Which join type should you use?",
+    options: [
+      "<code>how='inner'</code>",
+      "<code>how='right'</code>",
+      "<code>how='outer'</code>",
+      "<code>how='left'</code>"
+    ],
+    correct: 2,
+    explanation: "<code>how='outer'</code> (full outer join) keeps <strong>all rows from both DataFrames</strong>. Months only present in one source get <code>NaN</code> for the missing columns. <code>inner</code> would drop 8 months; <code>left</code>/<code>right</code> would favour only one side."
+  },
+  // Q10 — correct: B (index 1)
+  {
+    topic: "combining",
+    text: "You use <code>pd.cut(df['price'], bins=4)</code>. What does <strong>equal-width</strong> binning mean?",
+    options: [
+      "Each bin contains the same number of rows",
+      "The value range (min→max) is divided into 4 intervals of equal size",
+      "Each bin spans exactly 25 units regardless of the data",
+      "Values are assigned to bins randomly to balance the groups"
+    ],
+    correct: 1,
+    explanation: "<code>pd.cut()</code> divides the <strong>value range</strong> into equal-width intervals. If prices range from 0 to 100, each of the 4 bins spans 25 units — but bins may have very different row counts. Use <code>pd.qcut()</code> if you want equal-count bins instead."
+  }
+];
+
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null); // null = unanswered, true/false = answered
+let score = 0;
+
+function renderQuestion(idx) {
+  const q = QUESTIONS[idx];
+  const topicTag = document.getElementById('topic-tag');
+  topicTag.textContent = q.topic === 'datetime' ? '⏱ Datetime' : '🔗 Combining';
+  topicTag.className = 'topic-tag ' + (q.topic === 'datetime' ? 'tag-datetime' : 'tag-combining');
+
+  document.getElementById('q-number').textContent = String(idx + 1).padStart(2, '0') + ' / ' + QUESTIONS.length;
+  document.getElementById('q-counter').textContent = `Question ${idx + 1} of ${QUESTIONS.length}`;
+  document.getElementById('pct-label').textContent = Math.round((idx / QUESTIONS.length) * 100) + '%';
+  document.getElementById('progress-fill').style.width = ((idx / QUESTIONS.length) * 100) + '%';
+
+  const qText = document.getElementById('question-text');
+  qText.innerHTML = q.text;
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+
+    if (answers[idx] !== null) {
+      btn.disabled = true;
+      const wasAnswered = answers[idx];
+      if (i === q.correct) {
+        btn.classList.add(wasAnswered === i ? 'correct' : 'reveal-correct');
+      } else if (wasAnswered === i) {
+        btn.classList.add('wrong');
+      }
+    } else {
+      btn.onclick = () => selectAnswer(idx, i);
+    }
+    grid.appendChild(btn);
+  });
+
+  // Show feedback if already answered
+  const feedback = document.getElementById('feedback');
+  if (answers[idx] !== null) {
+    const isCorrect = answers[idx] === q.correct;
+    feedback.className = 'feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+    feedback.innerHTML = `<span class="feedback-icon">${isCorrect ? '✅' : '❌'}</span> ${q.explanation}`;
+  } else {
+    feedback.className = 'feedback';
+    feedback.innerHTML = '';
+  }
+
+  // Nav buttons
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('next-btn').textContent = idx === QUESTIONS.length - 1 ? 'Finish →' : 'Next →';
+
+  updateNavDots();
+  document.getElementById('live-score').textContent = score;
+}
+
+function selectAnswer(qIdx, optIdx) {
+  const q = QUESTIONS[qIdx];
+  const isCorrect = optIdx === q.correct;
+  answers[qIdx] = optIdx;
+
+  if (isCorrect) score++;
+  document.getElementById('live-score').textContent = score;
+
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add(isCorrect && i === optIdx ? 'correct' : 'reveal-correct');
+    else if (i === optIdx) btn.classList.add('wrong');
+  });
+
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+  feedback.innerHTML = `<span class="feedback-icon">${isCorrect ? '✅' : '❌'}</span> ${q.explanation}`;
+
+  updateNavDots();
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0) return;
+  if (next >= QUESTIONS.length) { showResults(); return; }
+  current = next;
+  renderQuestion(current);
+}
+
+function updateNavDots() {
+  const container = document.getElementById('nav-dots');
+  container.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    if (answers[i] === null) dot.classList.add('unanswered');
+    else if (answers[i] === QUESTIONS[i].correct) dot.classList.add('answered-correct');
+    else dot.classList.add('answered-wrong');
+    dot.style.cursor = 'pointer';
+    dot.title = `Q${i + 1}`;
+    dot.onclick = () => { current = i; renderQuestion(i); };
+    container.appendChild(dot);
+  });
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const rs = document.getElementById('results-screen');
+  rs.style.display = 'block';
+
+  const answered = answers.filter(a => a !== null).length;
+  const correct = answers.filter((a, i) => a === QUESTIONS[i].correct).length;
+  const wrong = answers.filter((a, i) => a !== null && a !== QUESTIONS[i].correct).length;
+  const skipped = answers.filter(a => a === null).length;
+
+  document.getElementById('final-score-num').textContent = correct;
+  document.getElementById('total-qs').textContent = QUESTIONS.length;
+  document.getElementById('correct-count').textContent = correct;
+  document.getElementById('wrong-count').textContent = wrong;
+  document.getElementById('skip-count').textContent = skipped;
+
+  const pct = Math.round((correct / QUESTIONS.length) * 100);
+  let msg;
+  if (pct === 100) msg = "🔥 Perfect score! You've nailed both topics cold. You're ready for the review.";
+  else if (pct >= 80) msg = "💪 Strong result! Review the ones you missed and you'll be solid.";
+  else if (pct >= 60) msg = "📚 Good foundation. Go back through the explanations on your misses before the daily review.";
+  else msg = "🔄 Keep at it — re-read the notebooks, especially the Key Takeaways sections, then try again.";
+
+  document.getElementById('result-msg').textContent = msg;
+
+  const dots = document.getElementById('result-dots');
+  dots.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot ' + (answers[i] === null ? 'unanswered' : answers[i] === QUESTIONS[i].correct ? 'answered-correct' : 'answered-wrong');
+    dot.title = `Q${i + 1}: ${QUESTIONS[i].topic}`;
+    dots.appendChild(dot);
+  });
+}
+
+function resetQuiz() {
+  current = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  score = 0;
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQuestion(0);
+}
+
+// Init
+renderQuestion(0);
+</script>
+</body>
+</html>
