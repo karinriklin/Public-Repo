@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Quote Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --a0:  #161b21;
+    --a1:  #1e2429;
+    --a2:  #252c33;
+    --a3:  #2e3740;
+    --a4:  #3c4650;
+    --a5:  #56626e;
+    --muted: #8a97a4;
+    --border: #313b45;
+    --border2: #3e4b56;
+    --text:  #dde4eb;
+    --text2: #aab5c0;
+    --text3: #6e7e8c;
+    --green:    #28b374;
+    --green-dk: #1f9460;
+    --green-lt: #37d48d;
+    --green-bg: #172820;
+    --green-bd: #254d3a;
+    --radius: 8px;
+    --radius-sm: 5px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--a0);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--a1);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .header-right {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  /* ── LAYOUT ── */
+  .shell {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+  }
+
+  /* ── STEPPER ── */
+  .stepper {
+    display: flex;
+    background: var(--a2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+  .step {
+    flex: 1;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .step:last-child { border-right: none; }
+  .step:hover { background: var(--a3); }
+  .step.active { background: var(--a1); cursor: default; }
+  .step.done   { background: var(--green-bg); }
+
+  .step-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--a4);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .step.active .step-num,
+  .step.done   .step-num { background: var(--green); color: var(--a0); }
+
+  .step-label { font-size: 13px; font-weight: 500; color: var(--text3); line-height: 1.25; }
+  .step.active .step-label { color: var(--text); }
+  .step.done   .step-label { color: var(--green); }
+  .step-sub  { font-size: 11px; color: var(--text3); font-weight: 300; }
+  .step.done .step-sub { color: var(--green-dk); }
+
+  /* ── PANEL ANIMATION ── */
+  .panel { display: none; animation: fadeIn 0.22s ease; }
+  .panel.visible { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--a2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 1.1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+  }
+
+  /* ── STEP 1 ── */
+  .field-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 108px;
+    resize: vertical;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--a1);
+    line-height: 1.6;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: var(--green); }
+  textarea::placeholder { color: var(--text3); }
+
+  .examples-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    align-items: center;
+  }
+  .ex-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.3px; margin-right: 2px; }
+  .chip {
+    font-size: 12px;
+    padding: 4px 11px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.1px;
+    transition: all 0.13s;
+  }
+  .chip:hover { border-color: var(--green); color: var(--green); }
+  .chip.active { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+
+  .gen-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--green);
+    color: var(--a0);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 1rem;
+  }
+  .gen-btn:hover { background: var(--green-lt); }
+  .gen-btn:active { transform: scale(0.998); }
+  .gen-btn:disabled { background: var(--a4); color: var(--muted); cursor: default; }
+
+  /* ── LOADING ── */
+  .loading-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.4rem;
+  }
+  .loading-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+  .loading-steps { display: flex; flex-direction: column; gap: 9px; }
+  .loading-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text3);
+    transition: color 0.18s;
+  }
+  .loading-step.active { color: var(--text); }
+  .loading-step.done   { color: var(--green-dk); }
+  .ls-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border2);
+    flex-shrink: 0;
+    transition: background 0.18s;
+  }
+  .loading-step.active .ls-dot { background: var(--text); animation: blink 0.9s infinite; }
+  .loading-step.done   .ls-dot { background: var(--green); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  /* ── BREAKDOWN ── */
+  .bd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .bd-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .bd-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 3px;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    border: 1px solid var(--green-bd);
+    color: var(--green);
+    background: var(--green-bg);
+  }
+
+  .li-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .li-table thead th {
+    text-align: left;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: var(--a1);
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+  }
+  .li-table thead th:not(:first-child) { text-align: right; }
+  .li-table tbody td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .li-table tbody tr:last-child td { border-bottom: none; }
+  .li-table tbody tr:hover { background: var(--a3); }
+  .li-table td:not(:first-child) { text-align: right; }
+  .pos-tag { font-size: 10px; color: var(--text3); margin-right: 6px; letter-spacing: 0.3px; font-weight: 400; }
+  .li-total { font-weight: 500; color: var(--text); }
+
+  .totals-block { display: flex; justify-content: flex-end; margin-top: 1.1rem; }
+  .totals-inner { min-width: 230px; }
+  .tot-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+  .tot-row.final {
+    border-bottom: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    padding-top: 11px;
+    margin-top: 3px;
+  }
+  .tot-row.final span:last-child { color: var(--green); }
+
+  /* ── SUPPLIER ── */
+  .winner-banner {
+    background: var(--green-bg);
+    border: 1px solid var(--green-bd);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .winner-banner strong { color: var(--green); }
+  .winner-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .shop-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 10px;
+    text-align: center;
+    background: var(--a1);
+  }
+  .shop-card.winner {
+    border-color: var(--green-bd);
+    background: var(--green-bg);
+  }
+  .shop-card-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text3);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+  .shop-card.winner .shop-card-name { color: var(--green); }
+  .shop-card-total {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .shop-card.winner .shop-card-total { color: var(--green); }
+  .shop-card-note { font-size: 10.5px; color: var(--text3); }
+  .shop-card.winner .shop-card-note { color: var(--green-dk); }
+  .best-label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--green-dk);
+    margin-bottom: 5px;
+  }
+
+  .price-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .price-table thead th {
+    text-align: left;
+    padding: 7px 10px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: var(--a1);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .price-table thead th:not(:first-child):not(:nth-child(2)) { text-align: right; }
+  .price-table tbody td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .price-table tbody tr:last-child td { border-bottom: none; }
+  .price-table tbody tr:hover { background: var(--a3); }
+  .price-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
+  .price-best { color: var(--green); font-weight: 600; }
+  .price-na   { color: var(--text3); font-style: italic; }
+
+  /* ── NAV ── */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.25rem;
+  }
+  .nav-btn {
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.13s;
+    letter-spacing: 0.1px;
+  }
+  .nav-btn:hover { border-color: var(--text3); color: var(--text); }
+  .nav-btn.primary {
+    background: var(--a2);
+    color: var(--green);
+    border-color: var(--green-bd);
+    font-weight: 500;
+  }
+  .nav-btn.primary:hover { background: var(--green-bg); border-color: var(--green); }
+
+  .doc-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--green);
+    border: 1px solid var(--green-bd);
+    border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+  }
+  .doc-btn:hover { background: var(--green-bg); border-color: var(--green); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem 0 3rem;
+    font-size: 11px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Construction Quote Tool
+  </div>
+  <div class="header-right">Berlin · AI-powered · Demo</div>
+</header>
+
+<div class="shell">
+
+  <div class="stepper">
+    <div class="step active" id="step0" onclick="stepClick(0)">
+      <div class="step-num" id="sn0">1</div>
+      <div>
+        <div class="step-label">Job description</div>
+        <div class="step-sub">Describe the scope</div>
+      </div>
+    </div>
+    <div class="step" id="step1" onclick="stepClick(1)">
+      <div class="step-num" id="sn1">2</div>
+      <div>
+        <div class="step-label">Cost breakdown</div>
+        <div class="step-sub">Materials + labour</div>
+      </div>
+    </div>
+    <div class="step" id="step2" onclick="stepClick(2)">
+      <div class="step-num" id="sn2">3</div>
+      <div>
+        <div class="step-label">Supplier comparison</div>
+        <div class="step-sub">Lowest basket price</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 1 -->
+  <div class="panel visible" id="panel0">
+    <div class="card">
+      <div class="card-title">Job description</div>
+      <div class="field-label">Scope of work</div>
+      <textarea id="jobInput" placeholder="e.g. Paint a 3-room flat in Prenzlauer Berg. Walls and ceilings, approx. 80m². Light sanding needed, 2 coats. Mid-range paint."></textarea>
+      <div class="examples-row">
+        <span class="ex-label">Load example</span>
+        <button class="chip active" id="chip-painting" onclick="loadExample('painting')">Flat painting</button>
+        <button class="chip"        id="chip-drywall"  onclick="loadExample('drywall')">Drywall partitions</button>
+        <button class="chip"        id="chip-tiling"   onclick="loadExample('tiling')">Bathroom retiling</button>
+      </div>
+    </div>
+    <button class="gen-btn" onclick="runGenerate()">Generate cost breakdown</button>
+  </div>
+
+  <!-- PANEL 2 -->
+  <div class="panel" id="panel1">
+    <div class="card" id="loadingCard">
+      <div class="card-title">Processing</div>
+      <div class="loading-bar"><div class="loading-fill" id="loadBar"></div></div>
+      <div class="loading-steps">
+        <div class="loading-step" id="ls0"><div class="ls-dot"></div>Classifying trade and job type</div>
+        <div class="loading-step" id="ls1"><div class="ls-dot"></div>Calculating Berlin market labour rates</div>
+        <div class="loading-step" id="ls2"><div class="ls-dot"></div>Estimating material quantities</div>
+        <div class="loading-step" id="ls3"><div class="ls-dot"></div>Applying 15% markup and 19% MwSt.</div>
+        <div class="loading-step" id="ls4"><div class="ls-dot"></div>Checking legal compliance (§ 35a EStG)</div>
+      </div>
+    </div>
+    <div class="card" id="breakdownCard" style="display:none">
+      <div class="bd-header">
+        <div>
+          <div class="bd-title" id="bdTitle"></div>
+          <div class="bd-meta"  id="bdMeta"></div>
+        </div>
+        <span class="badge" id="bdCat"></span>
+      </div>
+      <table class="li-table">
+        <thead><tr>
+          <th style="width:44%">Description</th>
+          <th>Unit</th>
+          <th>Material</th>
+          <th>Labour</th>
+          <th>Total</th>
+        </tr></thead>
+        <tbody id="lineItems"></tbody>
+      </table>
+      <div class="totals-block">
+        <div class="totals-inner">
+          <div class="tot-row"><span>Netto subtotal</span><span id="tNetto"></span></div>
+          <div class="tot-row"><span>Aufschlag 15%</span><span id="tMarkup"></span></div>
+          <div class="tot-row"><span>MwSt. 19%</span><span id="tMwst"></span></div>
+          <div class="tot-row final"><span>Brutto total</span><span id="tBrutto"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row" id="bdNav" style="display:none">
+      <button class="nav-btn" onclick="goPanel(0)">Back</button>
+      <button class="nav-btn primary" onclick="goPanel(2); renderSuppliers()">Compare suppliers</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3 -->
+  <div class="panel" id="panel2">
+    <div class="card">
+      <div class="card-title">Supplier price comparison — Berlin</div>
+      <div id="supplierContent"></div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn" onclick="goPanel(1)">Back</button>
+    </div>
+    <button class="doc-btn" onclick="alert('In the live tool, this step generates two Word documents:\n\n1. Client-facing Angebot (DIN 5008, netto + MwSt., valid 30 days)\n2. Internal Einkaufsliste with the full shopping cart and article numbers for the recommended supplier.')">Generate Word documents</button>
+  </div>
+
+</div>
+
+<footer>
+  Construction Quote Tool &nbsp;·&nbsp; Berlin market rates 2026 &nbsp;·&nbsp; Demo build
+</footer>
+
+<script>
+const EXAMPLES = {
+  painting: "Paint a 3-room flat in Prenzlauer Berg. Walls and ceilings, approx. 80m². Light sanding needed, 2 coats. Client wants mid-range paint.",
+  drywall:  "Install drywall partitions in a Neukölln office. 45m² total wall area. Standard 12.5mm Rigips, metal framing, tape and fill, ready for painting.",
+  tiling:   "Retile a bathroom in Mitte — floor (8m²) and walls (22m²). Remove existing tiles, waterproofing membrane on floor. Mid-range ceramic tiles supplied by client."
+};
+
+const DATA = {
+  painting: {
+    title: "Maler & Lackierer — 3-room flat, ~80 m²",
+    meta:  "Prenzlauer Berg · 2 coats · sanding prep included",
+    cat:   "Interior finishing",
+    items: [
+      { pos:1, desc:"Surface preparation — sanding, filling cracks", qty:"80 m²",    mat:96,  lab:280 },
+      { pos:2, desc:"Primer coat — walls & ceiling",                  qty:"80 m²",    mat:120, lab:240 },
+      { pos:3, desc:"2× finish coat, mid-range paint",                qty:"80 m²",    mat:310, lab:480 },
+      { pos:4, desc:"Masking, protection, site clean-up",             qty:"pauschal", mat:45,  lab:90  },
+      { pos:5, desc:"Anfahrtspauschale",                              qty:"1×",       mat:0,   lab:40  },
+    ],
+    mats: [
+      { name:"Primer (Tiefengrund)",       spec:"10 L can",      qty:3, bauhaus:18.90, obi:17.49, hornbach:16.80, globus:18.20 },
+      { name:"Finish paint (Alpina Weiß)", spec:"10 L can",      qty:8, bauhaus:32.50, obi:29.99, hornbach:28.90, globus:30.49 },
+      { name:"Filler / Spachtelmasse",     spec:"5 kg bucket",   qty:4, bauhaus:8.90,  obi:7.99,  hornbach:8.20,  globus:null  },
+      { name:"Masking tape 38mm×50m",      spec:"roll",          qty:6, bauhaus:3.99,  obi:3.49,  hornbach:3.10,  globus:3.89  },
+      { name:"Protective sheeting",        spec:"4m×25m roll",   qty:2, bauhaus:12.90, obi:11.49, hornbach:10.90, globus:11.99 },
+    ]
+  },
+  drywall: {
+    title: "Trockenbauer — office partitions, 45 m²",
+    meta:  "Neukölln · 12.5mm Rigips · metal framing · ready for paint",
+    cat:   "Interior fit-out",
+    items: [
+      { pos:1, desc:"Metal stud framing, floor-to-ceiling",  qty:"45 m²", mat:310, lab:360 },
+      { pos:2, desc:"12.5mm Gipskarton, both sides",         qty:"90 m²", mat:440, lab:540 },
+      { pos:3, desc:"Tape, joint compound, skimming",        qty:"45 m²", mat:130, lab:270 },
+      { pos:4, desc:"Rockwool insulation between studs",     qty:"45 m²", mat:195, lab:90  },
+      { pos:5, desc:"Anfahrtspauschale",                     qty:"1×",    mat:0,   lab:35  },
+    ],
+    mats: [
+      { name:"Gipskartonplatte 12,5mm",  spec:"1.25×2 m sheet", qty:40, bauhaus:8.50,  obi:7.90,  hornbach:7.40,  globus:null  },
+      { name:"CW Metallprofil 75mm",     spec:"2.75 m length",  qty:24, bauhaus:4.20,  obi:3.99,  hornbach:3.65,  globus:4.10  },
+      { name:"Rockwool Sonorock 50mm",   spec:"per m²",         qty:50, bauhaus:5.90,  obi:5.49,  hornbach:5.10,  globus:5.65  },
+      { name:"Joint compound 25 kg",     spec:"bag",            qty:4,  bauhaus:12.99, obi:11.49, hornbach:13.50, globus:10.99 },
+      { name:"Drywall screws 3.5×35mm",  spec:"500 pcs box",    qty:3,  bauhaus:6.49,  obi:5.99,  hornbach:5.60,  globus:6.20  },
+    ]
+  },
+  tiling: {
+    title: "Fliesenleger — bathroom retile, 30 m²",
+    meta:  "Mitte · Floor 8m² + walls 22m² · waterproofing included",
+    cat:   "Interior fit-out",
+    items: [
+      { pos:1, desc:"Remove existing tiles, floor & walls",  qty:"30 m²",    mat:0,   lab:450 },
+      { pos:2, desc:"Waterproofing membrane, floor",         qty:"8 m²",     mat:180, lab:120 },
+      { pos:3, desc:"Floor tiling (client tiles supplied)",  qty:"8 m²",     mat:95,  lab:480 },
+      { pos:4, desc:"Wall tiling (client tiles supplied)",   qty:"22 m²",    mat:165, lab:880 },
+      { pos:5, desc:"Grouting, silicone sealing, clean-up", qty:"pauschal", mat:65,  lab:180 },
+    ],
+    mats: [
+      { name:"Tile adhesive Flex 25 kg",    spec:"bag",             qty:8, bauhaus:16.90, obi:15.49, hornbach:14.80, globus:15.90 },
+      { name:"Waterproofing Dichtschlämme", spec:"7 kg bucket",     qty:3, bauhaus:22.50, obi:20.99, hornbach:19.90, globus:21.50 },
+      { name:"Tile grout Fugenmörtel 5 kg", spec:"bag",             qty:6, bauhaus:9.90,  obi:8.99,  hornbach:8.40,  globus:9.20  },
+      { name:"Silicone sealant white",      spec:"310 ml cartridge",qty:4, bauhaus:5.99,  obi:5.49,  hornbach:5.10,  globus:5.80  },
+      { name:"Tile spacers 2mm",            spec:"500 pcs bag",     qty:3, bauhaus:3.49,  obi:2.99,  hornbach:2.80,  globus:3.20  },
+    ]
+  }
+};
+
+let currentKey = 'painting';
+
+function loadExample(key) {
+  currentKey = key;
+  document.getElementById('jobInput').value = EXAMPLES[key];
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('chip-' + key).classList.add('active');
+}
+
+function detectKey() {
+  const v = document.getElementById('jobInput').value.toLowerCase();
+  if (v.includes('tile') || v.includes('tiling') || v.includes('bathroom') || v.includes('flie')) return 'tiling';
+  if (v.includes('drywall') || v.includes('rigips') || v.includes('partition') || v.includes('gips') || v.includes('trocken')) return 'drywall';
+  return 'painting';
+}
+
+function fmt(n) { return '€\u202f' + n.toFixed(2).replace('.', ','); }
+
+function goPanel(n) {
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('visible', i === n));
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.remove('active', 'done');
+    if (i < n)  s.classList.add('done');
+    if (i === n) s.classList.add('active');
+  });
+  document.querySelectorAll('.step-num').forEach((sn, i) => {
+    sn.textContent = i < n ? '✓' : (i + 1);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function stepClick(n) {
+  if (n > 0 && !DATA[currentKey]) return;
+  goPanel(n);
+  if (n === 2) renderSuppliers();
+}
+
+function runGenerate() {
+  currentKey = detectKey();
+  goPanel(1);
+  document.getElementById('loadingCard').style.display = 'block';
+  document.getElementById('breakdownCard').style.display = 'none';
+  document.getElementById('bdNav').style.display = 'none';
+  document.getElementById('loadBar').style.width = '0%';
+  [0,1,2,3,4].forEach(i => document.getElementById('ls'+i).classList.remove('active','done'));
+
+  const timings = [250, 600, 1000, 1400, 1750];
+  const widths  = [16, 38, 58, 78, 95];
+
+  timings.forEach((t, i) => {
+    setTimeout(() => {
+      if (i > 0) document.getElementById('ls'+(i-1)).classList.replace('active','done');
+      document.getElementById('ls'+i).classList.add('active');
+      document.getElementById('loadBar').style.width = widths[i] + '%';
+    }, t);
+  });
+
+  setTimeout(() => {
+    document.getElementById('ls4').classList.replace('active','done');
+    document.getElementById('loadBar').style.width = '100%';
+    setTimeout(renderBreakdown, 260);
+  }, 2050);
+}
+
+function renderBreakdown() {
+  const d = DATA[currentKey];
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('breakdownCard').style.display = 'block';
+  document.getElementById('bdNav').style.display = 'flex';
+  document.getElementById('bdTitle').textContent = d.title;
+  document.getElementById('bdMeta').textContent  = d.meta;
+  document.getElementById('bdCat').textContent   = d.cat;
+
+  let netto = 0;
+  const tbody = document.getElementById('lineItems');
+  tbody.innerHTML = '';
+  d.items.forEach(item => {
+    const tot = item.mat + item.lab;
+    netto += tot;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="pos-tag">POS ${item.pos}</span>${item.desc}</td>
+      <td style="color:var(--text3)">${item.qty}</td>
+      <td>${item.mat > 0 ? fmt(item.mat) : '—'}</td>
+      <td>${fmt(item.lab)}</td>
+      <td class="li-total">${fmt(tot)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  const markup = netto * 0.15;
+  const mwst   = (netto + markup) * 0.19;
+  const brutto = netto + markup + mwst;
+  document.getElementById('tNetto').textContent  = fmt(netto);
+  document.getElementById('tMarkup').textContent = fmt(markup);
+  document.getElementById('tMwst').textContent   = fmt(mwst);
+  document.getElementById('tBrutto').textContent = fmt(brutto);
+}
+
+function renderSuppliers() {
+  const d = DATA[currentKey];
+  const shops = ['bauhaus','obi','hornbach','globus'];
+  const names = { bauhaus:'Bauhaus', obi:'OBI', hornbach:'Hornbach', globus:'Globus' };
+
+  const totals = {};
+  shops.forEach(s => {
+    totals[s] = d.mats.reduce((sum, m) => sum + (m[s] ? m[s] * m.qty : 0), 0);
+  });
+
+  const winner  = shops.reduce((a, b) => totals[a] <= totals[b] ? a : b);
+  const maxT    = Math.max(...shops.map(s => totals[s]));
+  const savings = maxT - totals[winner];
+
+  let html = `<div class="winner-banner"><div class="winner-dot"></div>Recommended supplier: <strong>${names[winner]}</strong> — saves ${fmt(savings)} vs. most expensive option for this job</div>`;
+
+  html += `<div class="shop-grid">`;
+  shops.forEach(s => {
+    const w = s === winner;
+    const missing = d.mats.filter(m => !m[s]).length;
+    html += `<div class="shop-card ${w ? 'winner' : ''}">
+      ${w ? '<div class="best-label">Best price</div>' : ''}
+      <div class="shop-card-name">${names[s]}</div>
+      <div class="shop-card-total">${fmt(totals[s])}</div>
+      <div class="shop-card-note">${missing > 0 ? missing + ' item(s) n.v.' : 'All items available'}</div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<table class="price-table">
+    <thead><tr>
+      <th>Material</th><th>Qty</th>
+      <th>Bauhaus</th><th>OBI</th><th>Hornbach</th><th>Globus</th>
+    </tr></thead><tbody>`;
+
+  d.mats.forEach(m => {
+    const avail = shops.filter(s => m[s]);
+    const best  = avail.reduce((a, b) => m[a] <= m[b] ? a : b);
+    html += `<tr>
+      <td><div style="color:var(--text);font-weight:500">${m.name}</div><div style="font-size:11px;color:var(--text3)">${m.spec}</div></td>
+      <td style="color:var(--text3)">${m.qty}×</td>`;
+    shops.forEach(s => {
+      if (!m[s]) html += `<td class="price-na">n.v.</td>`;
+      else       html += `<td class="${s === best ? 'price-best' : ''}">${fmt(m[s])}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `<tr style="background:var(--a1)">
+    <td colspan="2" style="font-weight:600;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:0.4px">Total basket</td>`;
+  html += shops.map(s =>
+    `<td style="font-weight:600;color:${s===winner?'var(--green)':'var(--text2)'};text-align:right">${fmt(totals[s])}</td>`
+  ).join('');
+  html += `</tr></tbody></table>`;
+
+  document.getElementById('supplierContent').innerHTML = html;
+}
+
+loadExample('painting');
+</script>
+</body>
+</html>
