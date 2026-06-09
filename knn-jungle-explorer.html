@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KNN Jungle Explorer 🌿</title>
+<meta name="description" content="An interactive game to learn K-Nearest Neighbours and distance metrics — identify mystery jungle animals by their habitat!">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a2e12;
+    color: #2C2C2A;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* ═══════════════════════════════════════
+     STICKY BANNER — sits outside container
+     so max-width centering never clips it
+  ═══════════════════════════════════════ */
+  .sticky-banner {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: #071c0b;
+    border-bottom: 2px solid #1e5c28;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.45);
+  }
+  .sticky-banner-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  /* page title row */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 0 10px;
+    border-bottom: 1px solid #1e5c28;
+  }
+  .page-header h1 { font-size: 19px; font-weight: 700; color: #d4f0a0; letter-spacing: .02em; }
+  .page-header .subtitle { font-size: 11px; color: #7db87d; margin-top: 2px; }
+  .header-badge {
+    font-size: 11px; font-weight: 700; background: #1e5c28;
+    color: #d4f0a0; padding: 4px 12px; border-radius: 20px; border: 1px solid #2d7a38;
+  }
+
+  /* topbar row */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0 10px;
+  }
+  .stats { display: flex; gap: 8px; }
+  .sc {
+    background: #0a2e12;
+    border-radius: 10px; padding: 5px 13px;
+    text-align: center; min-width: 60px; border: 1.5px solid #2d6e3a;
+  }
+  .sc .v { font-size: 19px; font-weight: 700; color: #d4f0a0; }
+  .sc .l { font-size: 10px; color: #7db87d; text-transform: uppercase; letter-spacing: .05em; }
+  .ctrl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ctrl label { font-size: 12px; color: #d4f0a0; font-weight: 700; }
+  select {
+    font-size: 12px; padding: 5px 10px; border-radius: 8px;
+    border: 1.5px solid #7db87d; background: #fff; color: #0a2e12; cursor: pointer; font-weight: 600;
+  }
+  .btn-new {
+    padding: 6px 14px; border-radius: 8px; border: 2px solid #2d6e3a;
+    background: #2d6e3a; cursor: pointer; font-size: 12px; color: #fff; font-weight: 700;
+    transition: background .15s;
+  }
+  .btn-new:hover { background: #3a8a48; }
+
+  /* ═══════════════════════════════════════
+     MAIN CONTENT
+  ═══════════════════════════════════════ */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px 16px 40px;
+  }
+
+  /* ── layout grid ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 286px;
+    gap: 14px;
+    align-items: start;
+  }
+  @media (max-width: 780px) {
+    .layout { grid-template-columns: 1fr; }
+    .map-col { position: static !important; }
+  }
+
+  /* left column sticks below the banner */
+  .map-col {
+    position: sticky;
+    top: var(--banner-h, 110px);
+    align-self: start;
+  }
+
+  /* ── canvas ── */
+  .canvas-wrap {
+    position: relative; border-radius: 14px; overflow: hidden;
+    border: 3px solid #071c0b; box-shadow: 0 6px 28px rgba(0,0,0,.55);
+  }
+  canvas { display: block; width: 100%; }
+  .toast {
+    text-align: center; font-size: 13px; font-weight: 700;
+    min-height: 22px; margin-top: 6px; transition: opacity .5s; color: #d4f0a0;
+  }
+
+  /* ── sidebar ── */
+  .side { display: flex; flex-direction: column; gap: 10px; }
+  .panel { background: #fff; border: 1.5px solid #b8dca0; border-radius: 12px; padding: 11px 13px; }
+  .panel h3 { font-size: 11px; font-weight: 700; margin-bottom: 7px; color: #0a2e12; text-transform: uppercase; letter-spacing: .07em; }
+  .tipbox { background: #eaf5e0; border-radius: 8px; padding: 7px 10px; font-size: 11px; color: #1a4d22; line-height: 1.55; margin-bottom: 7px; border-left: 3px solid #7db87d; }
+  .lrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #1a4d22; margin-bottom: 5px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,.2); }
+  .kwrap { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .kwrap label { font-size: 12px; color: #1a4d22; font-weight: 700; white-space: nowrap; }
+  .kwrap input[type=range] { flex: 1; accent-color: #c8860a; }
+  .kv { font-size: 13px; font-weight: 700; color: #0a2e12; min-width: 14px; }
+  .dlist { font-size: 11px; color: #3a5a3a; }
+  .dr { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #d4edbc; }
+  .dr:last-child { border-bottom: none; }
+  .pbtns { display: flex; gap: 6px; margin-top: 4px; }
+  .pbtns button { flex: 1; padding: 9px 3px; border-radius: 9px; border: 2px solid #999; background: #fff; font-size: 11px; cursor: pointer; font-weight: 700; transition: transform .12s, box-shadow .12s; line-height: 1.35; }
+  .pbtns button:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,.15); }
+  .pbtns button:active { transform: scale(.95); }
+  .fb { padding: 8px 10px; border-radius: 9px; font-size: 11px; font-weight: 700; text-align: center; margin-top: 7px; line-height: 1.4; }
+  .fb.ok   { background: #d4f0a0; color: #1a4d22; border: 1.5px solid #7db87d; }
+  .fb.no   { background: #fde0d8; color: #7a1a1a; border: 1.5px solid #e08070; }
+  .fb.wait { background: #fff8e6; color: #7a5000; border: 1.5px solid #e8c060; }
+  .lvlbtns { display: flex; gap: 6px; margin-bottom: 8px; }
+  .lvlbtns button { flex: 1; padding: 7px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; background: #d4edbc; border: 2px solid #7db87d; color: #1a4d22; }
+  .lvlbtns button:hover { background: #c0e0a0; border-color: #5aaa40; }
+  .lvlbtns button.act { background: #c8860a; border-color: #9a6408; color: #fff; }
+  .stars { display: flex; gap: 3px; margin-bottom: 5px; }
+  .star { font-size: 19px; }
+  .xpwrap { height: 7px; background: #d4edbc; border-radius: 4px; overflow: hidden; margin-bottom: 4px; border: 1px solid #7db87d; }
+  .xpbar { height: 100%; background: #c8860a; border-radius: 4px; transition: width .5s; }
+  .xplbl { font-size: 10px; color: #2d6e3a; font-weight: 700; margin-bottom: 5px; }
+  .badgerow { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: #fff8e6; color: #7a5000; border: 1px solid #e8c060; font-weight: 600; }
+  .badge.new { background: #d4f0a0; color: #1a4d22; border-color: #7db87d; }
+  .chatwrap { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 8px; }
+  .bubble { background: #fff8e6; border-radius: 10px; border-top-left-radius: 2px; padding: 9px 11px; font-size: 11px; color: #4a2e00; line-height: 1.55; flex: 1; border: 1.5px solid #e8c060; font-style: italic; }
+  .fml-box { background: #f0f8e8; border-radius: 8px; padding: 8px 10px; font-size: 11px; font-family: 'Courier New', monospace; color: #0a2e12; line-height: 1.7; margin-bottom: 6px; border: 1px solid #b8dca0; }
+  .fml-tip { font-size: 11px; color: #3a5a3a; line-height: 1.5; }
+
+  /* ── footer ── */
+  .page-footer { text-align: center; padding: 18px; font-size: 11px; color: #4a7a4a; border-top: 1px solid #1e5c28; margin-top: 10px; }
+  .page-footer a { color: #7db87d; text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+
+  /* ── animations ── */
+  @keyframes pop    { 0%{transform:scale(1)} 45%{transform:scale(1.42)} 100%{transform:scale(1)} }
+  @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes waddle { 0%,100%{transform:rotate(-4deg) translateY(0)} 50%{transform:rotate(4deg) translateY(-3px)} }
+  .waddle  { animation: waddle 2s ease-in-out infinite; transform-origin: bottom center; }
+  .popping { animation: pop   .4s ease; }
+  .shaking { animation: shake .35s ease; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     STICKY BANNER (outside every container)
+═══════════════════════════════════════════ -->
+<div class="sticky-banner" id="sticky-banner">
+  <div class="sticky-banner-inner">
+
+    <!-- title row -->
+    <header class="page-header">
+      <div>
+        <h1>🌿 KNN Jungle Explorer</h1>
+        <div class="subtitle">Learn K-Nearest Neighbours &amp; distance metrics by tracking jungle animals</div>
+      </div>
+      <span class="header-badge">Interactive ML Game</span>
+    </header>
+
+    <!-- scores + controls row -->
+    <div class="topbar">
+      <div class="stats">
+        <div class="sc"><div class="v" id="sco">0</div><div class="l">score</div></div>
+        <div class="sc"><div class="v" id="stk">0</div><div class="l">streak</div></div>
+        <div class="sc"><div class="v" id="sxp">0</div><div class="l">xp</div></div>
+      </div>
+      <div class="ctrl">
+        <label>distance metric:</label>
+        <select id="msel">
+          <option value="euclidean">Euclidean (L2)</option>
+          <option value="manhattan">Manhattan (L1)</option>
+          <option value="chebyshev">Chebyshev (L∞)</option>
+        </select>
+        <button class="btn-new" onclick="newRound()">new area ↺</button>
+      </div>
+    </div>
+
+  </div><!-- /sticky-banner-inner -->
+</div><!-- /sticky-banner -->
+
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════ -->
+<div class="container">
+  <div class="layout">
+
+    <!-- left: sticky map -->
+    <div class="map-col" id="map-col">
+      <div class="canvas-wrap">
+        <canvas id="cv" height="460"></canvas>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- right: scrollable sidebar -->
+    <div class="side">
+
+      <!-- guide -->
+      <div class="panel">
+        <div class="chatwrap">
+          <svg id="guide" class="waddle" width="52" height="64" viewBox="0 0 52 64" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="26" cy="46" rx="17" ry="14" fill="#EF9F27" stroke="#2C2C2A" stroke-width="2"/>
+            <rect x="13" y="55" width="7" height="10" rx="3.5" fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <rect x="22" y="57" width="7" height="9"  rx="3.5" fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <rect x="31" y="57" width="7" height="9"  rx="3.5" fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <rect x="40" y="55" width="6" height="10" rx="3"   fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <path d="M43 40 Q56 28 51 18" stroke="#2C2C2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="51" cy="17" r="3.2" fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <circle cx="19" cy="42" r="3.2" fill="#2C2C2A"/>
+            <circle cx="29" cy="39" r="2.8" fill="#2C2C2A"/>
+            <circle cx="25" cy="52" r="2.5" fill="#2C2C2A"/>
+            <circle cx="36" cy="48" r="2.8" fill="#2C2C2A"/>
+            <circle cx="15" cy="51" r="2.2" fill="#2C2C2A"/>
+            <circle cx="38" cy="42" r="2"   fill="#2C2C2A"/>
+            <ellipse cx="18" cy="22" rx="15" ry="14" fill="#EF9F27" stroke="#2C2C2A" stroke-width="2"/>
+            <polygon points="7,12 3,2 13,8"   fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <polygon points="29,10 33,1 23,7"  fill="#EF9F27" stroke="#2C2C2A" stroke-width="1.8"/>
+            <circle cx="12" cy="18" r="2"   fill="#2C2C2A"/>
+            <circle cx="23" cy="16" r="1.8" fill="#2C2C2A"/>
+            <circle cx="17" cy="28" r="1.8" fill="#2C2C2A"/>
+            <ellipse cx="11" cy="21" rx="4"   ry="4.5" fill="#fff" stroke="#2C2C2A" stroke-width="1.5"/>
+            <ellipse cx="24" cy="21" rx="4"   ry="4.5" fill="#fff" stroke="#2C2C2A" stroke-width="1.5"/>
+            <circle cx="12"   cy="22"   r="2.2" fill="#1a1a1a"/>
+            <circle cx="25"   cy="22"   r="2.2" fill="#1a1a1a"/>
+            <circle cx="12.8" cy="21.2" r=".8"  fill="#fff"/>
+            <circle cx="25.8" cy="21.2" r=".8"  fill="#fff"/>
+            <ellipse cx="18" cy="27" rx="2.5" ry="1.5" fill="#F09595" stroke="#2C2C2A" stroke-width="1"/>
+            <path id="mouth" d="M14 30 Q18 34 22 30" stroke="#2C2C2A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="3"  y1="27" x2="12" y2="28" stroke="#2C2C2A" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="3"  y1="30" x2="12" y2="29" stroke="#2C2C2A" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="24" y1="28" x2="34" y2="27" stroke="#2C2C2A" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="24" y1="29" x2="34" y2="30" stroke="#2C2C2A" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <div class="bubble" id="bubble">Psst! I'm Spots, your jungle guide. Tap the map to find mysterious animal tracks!</div>
+        </div>
+        <div class="stars">
+          <span class="star" id="s0" style="color:#ccc">★</span>
+          <span class="star" id="s1" style="color:#ccc">★</span>
+          <span class="star" id="s2" style="color:#ccc">★</span>
+        </div>
+        <div class="xpwrap"><div class="xpbar" id="xpbar" style="width:0%"></div></div>
+        <div class="xplbl" id="xplbl">Rookie Explorer — 0 / 100 xp</div>
+        <div class="badgerow" id="badgerow"></div>
+      </div>
+
+      <!-- level -->
+      <div class="panel">
+        <h3>level</h3>
+        <div class="lvlbtns">
+          <button id="lb-easy"   class="act" onclick="setLevel('easy')">🌿 Easy</button>
+          <button id="lb-medium"             onclick="setLevel('medium')">🌴 Medium</button>
+          <button id="lb-hard"               onclick="setLevel('hard')">🌋 Hard</button>
+        </div>
+        <div class="tipbox" id="lvltip">3 animal zones, clearly separated. Perfect for learning!</div>
+      </div>
+
+      <!-- k -->
+      <div class="panel">
+        <h3>k = nearest neighbors</h3>
+        <div class="tipbox">k is how many nearby known animals get to vote. The species that appears most often among those k neighbors wins — that's KNN!</div>
+        <div class="kwrap">
+          <label>k =</label>
+          <input type="range" id="ksl" min="1" max="9" step="2" value="3">
+          <span class="kv" id="kv">3</span>
+        </div>
+        <div class="lrow"><div class="dot" style="background:#2e7d32"></div><strong style="color:#2e7d32">🦜 Macaw</strong> — river canopy</div>
+        <div class="lrow"><div class="dot" style="background:#b84a00"></div><strong style="color:#b84a00">🐆 Jaguar</strong> — dense thicket</div>
+        <div class="lrow"><div class="dot" style="background:#1255a0"></div><strong style="color:#1255a0">🐸 Tree Frog</strong> — wet forest floor</div>
+        <div class="lrow" style="margin-top:4px"><div class="dot" style="background:#c8860a;width:12px;height:12px"></div>❓ mystery animal (you!)</div>
+        <div class="lrow"><div class="dot" style="background:#fff;border:2.5px solid #c8860a;width:12px;height:12px"></div>gold ring = selected neighbor</div>
+      </div>
+
+      <!-- distances -->
+      <div class="panel">
+        <h3>habitat distances</h3>
+        <div class="tipbox" id="dtip">Distance = how far the mystery animal is from each known animal. The k closest ones each get one vote!</div>
+        <div class="dlist" id="dl"><span style="color:#7a9a7a">tap the map to begin tracking</span></div>
+      </div>
+
+      <!-- predict -->
+      <div class="panel">
+        <h3>what animal is hiding?</h3>
+        <div class="tipbox">Look at the glowing highlighted neighbors. Which species appears most? That's the KNN majority vote — pick it!</div>
+        <div class="pbtns">
+          <button style="color:#2e7d32;border-color:#2e7d32" onclick="predict('A')">🦜<br>Macaw</button>
+          <button style="color:#b84a00;border-color:#b84a00" onclick="predict('B')">🐆<br>Jaguar</button>
+          <button style="color:#1255a0;border-color:#1255a0" onclick="predict('C')">🐸<br>Frog</button>
+        </div>
+        <div class="fb wait" id="fb">tap the map first</div>
+      </div>
+
+      <!-- formula -->
+      <div class="panel">
+        <h3>distance formula</h3>
+        <div class="fml-box" id="fml">d = sqrt((x2-x1)^2 + (y2-y1)^2)</div>
+        <div class="fml-tip" id="mtip">Euclidean: straight-line distance — "as the macaw flies." Most natural metric, but sensitive to feature scale differences.</div>
+      </div>
+
+    </div><!-- /side -->
+  </div><!-- /layout -->
+</div><!-- /container -->
+
+<footer class="page-footer">
+  KNN Jungle Explorer — built for learning K-Nearest Neighbours &amp; distance metrics &nbsp;·&nbsp;
+  <a href="https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm" target="_blank" rel="noopener">Learn more about KNN ↗</a>
+</footer>
+
+<script>
+/* ── measure banner height and set CSS var so map-col sticks right below it ── */
+function setBannerHeight() {
+  var h = document.getElementById('sticky-banner').offsetHeight;
+  document.getElementById('map-col').style.top = (h + 10) + 'px';
+}
+window.addEventListener('resize', setBannerHeight);
+/* run after first paint */
+window.addEventListener('load', setBannerHeight);
+
+var cv   = document.getElementById('cv');
+var ctx  = cv.getContext('2d');
+var COLS  = { A:'#2e7d32', B:'#b84a00', C:'#1255a0' };
+var NAMES = { A:'Macaw',   B:'Jaguar',  C:'Tree Frog' };
+
+var pts=[], qpt=null, answered=false;
+var score=0, streak=0, xp=0, level='easy', badges=[];
+
+var LEVELS = {
+  easy:   { k:3, clusters:3, spread:.18, noise:0,   tip:'3 animal zones, clearly separated. Perfect for learning!' },
+  medium: { k:3, clusters:5, spread:.20, noise:.04,  tip:'5 overlapping zones — animals roam a bit further!' },
+  hard:   { k:5, clusters:6, spread:.27, noise:.10,  tip:'Noisy jungle — animals stray far. Real-world messiness!' }
+};
+
+var FORMULAS = {
+  euclidean: {
+    f:'d = sqrt((x2-x1)^2 + (y2-y1)^2)',
+    tip:'Euclidean: straight-line distance — "as the macaw flies." Most natural metric, but sensitive to feature scale differences.',
+    dtip:'Distance = straight-line gap. Draws a circle around the mystery point.'
+  },
+  manhattan: {
+    f:'d = |x2-x1| + |y2-y1|',
+    tip:'Manhattan: grid-path distance — only horizontal or vertical moves count, like following jungle trails.',
+    dtip:'Grid distance: sum of horizontal + vertical steps. Draws a diamond-shaped search zone.'
+  },
+  chebyshev: {
+    f:'d = max(|x2-x1|, |y2-y1|)',
+    tip:'Chebyshev: the larger of horizontal or vertical gap — like a jaguar\'s diagonal leap.',
+    dtip:'Max-axis distance. Draws a square search zone — every direction equally weighted.'
+  }
+};
+
+var TALKS = {
+  idle:    'Psst! Tap the jungle map to find mysterious animal tracks!',
+  placed:  'Interesting tracks! Count the glowing neighbors — which species appears most?',
+  correct: ['Purrfect! The habitat speaks the truth!','You read the jungle like a true explorer!','Spot on! Majority vote nailed it!'],
+  wrong:   ['Hmm, count those glowing dots again carefully...','Majority vote wins — not just the closest!','Not quite! Which colour glows most among k neighbors?'],
+  streak3: '3 in a row! The jungle spirits bow to you!',
+  streak5: '5-streak! You are practically a jungle creature!'
+};
+
+function getM(){ return document.getElementById('msel').value; }
+function getK(){ return parseInt(document.getElementById('ksl').value); }
+
+function dist(a,b){
+  var m=getM(), dx=Math.abs(a.x-b.x), dy=Math.abs(a.y-b.y);
+  if(m==='euclidean') return Math.sqrt(dx*dx+dy*dy);
+  if(m==='manhattan') return dx+dy;
+  return Math.max(dx,dy);
+}
+
+function rnd(n){ n=(n*9301+49297)%233280; return n/233280; }
+
+function genPts(){
+  var W=cv.width, H=cv.height, cfg=LEVELS[level], pad=60;
+  pts=[];
+  var bases=[
+    {x:.20,y:.28,c:'A'},{x:.76,y:.25,c:'B'},{x:.50,y:.76,c:'C'},
+    {x:.17,y:.72,c:'A'},{x:.80,y:.68,c:'B'},{x:.50,y:.46,c:'C'}
+  ].slice(0,cfg.clusters);
+  bases.forEach(function(b){
+    for(var i=0;i<9;i++){
+      var x=b.x*W+(Math.random()-.5)*cfg.spread*W;
+      var y=b.y*H+(Math.random()-.5)*cfg.spread*H;
+      if(cfg.noise>0 && Math.random()<cfg.noise){
+        x=pad+Math.random()*(W-pad*2);
+        y=pad+Math.random()*(H-pad*2);
+      }
+      pts.push({ x:Math.max(pad,Math.min(W-pad,x)), y:Math.max(pad,Math.min(H-pad,y)), c:b.c });
+    }
+  });
+}
+
+function getNbrs(){
+  if(!qpt) return [];
+  return pts.map(function(p){ return{x:p.x,y:p.y,c:p.c,d:dist(p,qpt)}; })
+            .sort(function(a,b){ return a.d-b.d; })
+            .slice(0,getK());
+}
+
+function majority(nb){
+  var v={A:0,B:0,C:0};
+  nb.forEach(function(n){ v[n.c]++; });
+  return Object.keys(v).sort(function(a,b){ return v[b]-v[a]; })[0];
+}
+
+function drawMap(W,H){
+  ctx.fillStyle='#4a7c2f'; ctx.fillRect(0,0,W,H);
+
+  function glow(x,y,rx,ry,col,a){
+    ctx.save(); ctx.globalAlpha=a;
+    var g=ctx.createRadialGradient(x,y,0,x,y,Math.max(rx,ry));
+    g.addColorStop(0,col); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill(); ctx.restore();
+  }
+  glow(W*.50,H*.48,W*.26,H*.30,'#8ec94a',1.0);
+  glow(W*.72,H*.28,W*.13,H*.15,'#82c240',0.9);
+  glow(W*.20,H*.55,W*.10,H*.12,'#79b83a',0.8);
+  glow(W*.82,H*.72,W*.10,H*.10,'#7ab53a',0.75);
+
+  var zones=[
+    {cx:.06,cy:.30,r:.14},{cx:.10,cy:.55,r:.12},{cx:.08,cy:.78,r:.13},
+    {cx:.28,cy:.06,r:.11},{cx:.50,cy:.04,r:.13},{cx:.72,cy:.07,r:.12},
+    {cx:.92,cy:.25,r:.12},{cx:.90,cy:.50,r:.13},{cx:.88,cy:.75,r:.12},
+    {cx:.20,cy:.93,r:.13},{cx:.45,cy:.95,r:.14},{cx:.70,cy:.92,r:.12},
+    {cx:.35,cy:.25,r:.09},{cx:.62,cy:.55,r:.08},{cx:.18,cy:.40,r:.08},
+    {cx:.78,cy:.45,r:.08},{cx:.42,cy:.72,r:.09}
+  ];
+  zones.forEach(function(t){
+    var cx=t.cx*W, cy=t.cy*H, r=t.r*Math.min(W,H);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#1e4d18'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx-r*.05,cy-r*.05,r*.88,0,Math.PI*2); ctx.fillStyle='#2a6620'; ctx.fill();
+    var seed=Math.round(cx+cy);
+    for(var i=0;i<12;i++){
+      var angle=rnd(seed+i)*Math.PI*2, d2=rnd(seed+i+100)*r*.75, cr=r*.18+rnd(seed+i+50)*r*.18;
+      var tx=cx+Math.cos(angle)*d2, ty=cy+Math.sin(angle)*d2;
+      ctx.beginPath(); ctx.arc(tx,ty,cr,0,Math.PI*2);
+      ctx.fillStyle=i%3===0?'#3d8c2a':i%3===1?'#347825':'#2d6b1f'; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(cx-r*.15,cy-r*.15,r*.35,0,Math.PI*2);
+    ctx.fillStyle='rgba(120,200,60,.22)'; ctx.fill();
+  });
+
+  for(var i=0;i<90;i++){
+    var tx=rnd(i*7+3)*W, ty=rnd(i*13+7)*H;
+    var dcx=tx/W-.5, dcy=ty/H-.48;
+    if(Math.sqrt(dcx*dcx*4+dcy*dcy*4)<.55 && Math.random()<.85) continue;
+    var tr=3+rnd(i*3+1)*5;
+    ctx.beginPath(); ctx.arc(tx+1,ty+1,tr,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(tx,ty,tr,0,Math.PI*2);
+    ctx.fillStyle=['#336b22','#2d5e1e','#3a7828','#265018'][i%4]; ctx.fill();
+    ctx.beginPath(); ctx.arc(tx-tr*.3,ty-tr*.3,tr*.4,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,180,50,.35)'; ctx.fill();
+  }
+
+  ctx.save(); ctx.globalAlpha=.06; ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.setLineDash([4,8]);
+  function contour(cx,cy,rx,ry){ ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.stroke(); }
+  contour(W*.50,H*.48,W*.15,H*.17);
+  contour(W*.50,H*.48,W*.22,H*.25);
+  contour(W*.72,H*.28,W*.08,H*.09);
+  ctx.setLineDash([]); ctx.restore();
+
+  var rp=[
+    [W*.31,0],[W*.30,H*.10],[W*.28,H*.22],[W*.26,H*.34],
+    [W*.23,H*.46],[W*.20,H*.58],[W*.17,H*.70],[W*.13,H*.82],
+    [W*.09,H*.92],[W*.07,H]
+  ];
+  function riverSpline(pts2,lw,col,alpha){
+    ctx.save(); ctx.globalAlpha=alpha!==undefined?alpha:1;
+    ctx.beginPath(); ctx.moveTo(pts2[0][0],pts2[0][1]);
+    for(var i=1;i<pts2.length-1;i++){
+      var mx=(pts2[i][0]+pts2[i+1][0])/2, my=(pts2[i][1]+pts2[i+1][1])/2;
+      ctx.quadraticCurveTo(pts2[i][0],pts2[i][1],mx,my);
+    }
+    ctx.lineTo(pts2[pts2.length-1][0],pts2[pts2.length-1][1]);
+    ctx.lineWidth=lw; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.stroke(); ctx.restore();
+  }
+  riverSpline(rp,38,'#0d3d2a');
+  riverSpline(rp,30,'#1a5c3e');
+  riverSpline(rp,22,'#1e8c6e');
+  riverSpline(rp,14,'#28b08a');
+  riverSpline(rp, 7,'#40cca0');
+  riverSpline(rp, 3,'#80e8cc',.45);
+  riverSpline(rp, 1,'#c0f8ee',.30);
+
+  ctx.beginPath(); ctx.ellipse(W*.07,H*.94,W*.055,H*.055,-.3,0,Math.PI*2); ctx.fillStyle='#1e8c6e'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(W*.07,H*.94,W*.044,H*.044,-.3,0,Math.PI*2); ctx.fillStyle='#28b08a'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(W*.065,H*.93,W*.02,H*.018,-.5,0,Math.PI*2); ctx.fillStyle='rgba(160,240,220,.45)'; ctx.fill();
+
+  ctx.save();
+  var ev=ctx.createLinearGradient(0,0,0,H);
+  ev.addColorStop(0,'rgba(8,25,8,.6)'); ev.addColorStop(.14,'rgba(0,0,0,0)');
+  ev.addColorStop(.86,'rgba(0,0,0,0)'); ev.addColorStop(1,'rgba(8,25,8,.6)');
+  ctx.fillStyle=ev; ctx.fillRect(0,0,W,H);
+  var eh=ctx.createLinearGradient(0,0,W,0);
+  eh.addColorStop(0,'rgba(8,25,8,.55)'); eh.addColorStop(.12,'rgba(0,0,0,0)');
+  eh.addColorStop(.88,'rgba(0,0,0,0)'); eh.addColorStop(1,'rgba(8,25,8,.55)');
+  ctx.fillStyle=eh; ctx.fillRect(0,0,W,H); ctx.restore();
+}
+
+function draw(){
+  var W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  drawMap(W,H);
+
+  var nb=getNbrs();
+  var nbKey=nb.map(function(n){ return n.x.toFixed(1)+'_'+n.y.toFixed(1); });
+
+  if(qpt && nb.length){
+    var m=getM(), maxD=nb[nb.length-1].d;
+    ctx.save(); ctx.strokeStyle='rgba(240,192,60,.75)'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+    if(m==='euclidean'){ ctx.beginPath(); ctx.arc(qpt.x,qpt.y,maxD,0,Math.PI*2); ctx.stroke(); }
+    else if(m==='manhattan'){
+      ctx.beginPath();
+      ctx.moveTo(qpt.x,qpt.y-maxD); ctx.lineTo(qpt.x+maxD,qpt.y);
+      ctx.lineTo(qpt.x,qpt.y+maxD); ctx.lineTo(qpt.x-maxD,qpt.y);
+      ctx.closePath(); ctx.stroke();
+    } else { ctx.strokeRect(qpt.x-maxD,qpt.y-maxD,maxD*2,maxD*2); }
+    ctx.setLineDash([]); ctx.restore();
+    nb.forEach(function(p){
+      ctx.beginPath(); ctx.moveTo(qpt.x,qpt.y); ctx.lineTo(p.x,p.y);
+      ctx.strokeStyle='rgba(240,192,60,.55)'; ctx.lineWidth=1.5; ctx.setLineDash([3,4]); ctx.stroke(); ctx.setLineDash([]);
+    });
+  }
+
+  pts.forEach(function(p){
+    var key=p.x.toFixed(1)+'_'+p.y.toFixed(1), isN=nbKey.indexOf(key)>=0, r=isN?10:7;
+    ctx.beginPath(); ctx.arc(p.x+1.5,p.y+1.5,r,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,.4)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle=COLS[p.c]; ctx.globalAlpha=isN?1:.75; ctx.fill();
+    if(isN){ ctx.strokeStyle='#f0c040'; ctx.lineWidth=2.5; ctx.globalAlpha=1; ctx.stroke(); }
+    else   { ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=1.2; ctx.globalAlpha=1; ctx.stroke(); }
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#fff'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.c,p.x,p.y);
+  });
+
+  if(qpt){
+    var tc=answered?majority(getNbrs()):null, r2=12;
+    ctx.beginPath(); ctx.arc(qpt.x+2,qpt.y+2,r2,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,.4)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(qpt.x,qpt.y,r2,0,Math.PI*2);
+    ctx.fillStyle=answered?COLS[tc]:'#c8860a'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(answered?tc:'?',qpt.x,qpt.y);
+  }
+  if(qpt) updateDist(nb);
+}
+
+function updateDist(nb){
+  var dl=document.getElementById('dl');
+  if(!nb.length){ dl.innerHTML=''; return; }
+  var v={A:0,B:0,C:0};
+  nb.forEach(function(n){ v[n.c]++; });
+  var pred=majority(nb);
+  dl.innerHTML=nb.map(function(n,i){
+    return '<div class="dr"><span><span style="color:'+COLS[n.c]+';font-weight:700">'+NAMES[n.c]+'</span> #'+(i+1)+'</span>'
+          +'<span style="font-weight:600">'+n.d.toFixed(0)+'m</span></div>';
+  }).join('')+'<div style="margin-top:5px;font-size:10px;color:#3a5a3a;padding-top:4px;border-top:1px solid #d4edbc">'
+  +'Macaw='+v.A+' Jaguar='+v.B+' Frog='+v.C
+  +' — <strong style="color:'+COLS[pred]+'">'+NAMES[pred]+' wins!</strong></div>';
+}
+
+function setMouth(h){
+  document.getElementById('mouth').setAttribute('d', h?'M14 30 Q18 34 22 30':'M14 33 Q18 29 22 33');
+}
+function setBubble(t){ document.getElementById('bubble').textContent=t; }
+function showToast(msg,col){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.color=col||'#d4f0a0'; t.style.opacity='1';
+  clearTimeout(window._tt);
+  window._tt=setTimeout(function(){ t.style.opacity='0'; },2200);
+}
+function animStar(i){
+  var s=document.getElementById('s'+i);
+  s.classList.remove('popping'); void s.offsetWidth; s.classList.add('popping');
+}
+function updateXP(){
+  var ranks=[
+    {t:0,  n:'Rookie Explorer'},{t:100,n:'Jungle Scout'},
+    {t:250,n:'Animal Tracker'},{t:500,n:'Safari Expert'},{t:1000,n:'Jungle Master'}
+  ];
+  var rank=ranks[0];
+  for(var i=0;i<ranks.length;i++){ if(xp>=ranks[i].t) rank=ranks[i]; }
+  var nxt=null;
+  for(var j=0;j<ranks.length;j++){ if(ranks[j].t>xp){ nxt=ranks[j]; break; } }
+  if(!nxt) nxt=ranks[ranks.length-1];
+  var pct=nxt.t>rank.t?Math.round((xp-rank.t)/(nxt.t-rank.t)*100):100;
+  document.getElementById('xpbar').style.width=pct+'%';
+  document.getElementById('sxp').textContent=xp;
+  document.getElementById('xplbl').textContent=rank.n+' — '+xp+'/'+(nxt?nxt.t:xp)+' xp';
+}
+function updateStars(){
+  var e=score>=10?3:score>=5?2:score>=2?1:0;
+  for(var i=0;i<3;i++) document.getElementById('s'+i).style.color=i<e?'#c8860a':'#ccc';
+}
+function checkBadge(label){
+  if(badges.indexOf(label)>=0) return;
+  badges.push(label);
+  var sp=document.createElement('span'); sp.className='badge new'; sp.textContent=label;
+  document.getElementById('badgerow').appendChild(sp);
+  setTimeout(function(){ sp.classList.remove('new'); },3000);
+}
+
+function predict(cls){
+  if(!qpt||answered) return;
+  answered=true;
+  var nb=getNbrs(), tc=majority(nb), v={A:0,B:0,C:0};
+  nb.forEach(function(n){ v[n.c]++; });
+  var ok=cls===tc;
+  if(ok){
+    score++; streak++; xp+=(level==='easy'?10:level==='medium'?20:35);
+    document.getElementById('fb').className='fb ok';
+    document.getElementById('fb').textContent='Correct! Macaw='+v.A+' Jaguar='+v.B+' Frog='+v.C+' → '+NAMES[tc]+'!';
+    var msg=streak>=5?TALKS.streak5:streak>=3?TALKS.streak3:TALKS.correct[Math.floor(Math.random()*3)];
+    setBubble(msg); setMouth(true);
+    showToast('+'+(level==='easy'?10:level==='medium'?20:35)+' xp','#d4f0a0');
+    for(var i=0;i<3;i++)(function(ii){ setTimeout(function(){ animStar(ii); },ii*140); })(i);
+    if(streak>=3)  checkBadge('🔥 Hot streak');
+    if(streak>=5)  checkBadge('⚡ On fire');
+    if(score>=10)  checkBadge('🏆 Jungle Master');
+    if(getM()==='chebyshev') checkBadge('♟ Chess king');
+    if(getM()==='manhattan') checkBadge('🗺 Pathfinder');
+  } else {
+    streak=0;
+    document.getElementById('fb').className='fb no';
+    document.getElementById('fb').textContent='Not quite! Macaw='+v.A+' Jaguar='+v.B+' Frog='+v.C+' → majority: '+NAMES[tc];
+    setBubble(TALKS.wrong[Math.floor(Math.random()*3)]); setMouth(false);
+    var g=document.getElementById('guide'); g.classList.remove('shaking'); void g.offsetWidth; g.classList.add('shaking');
+    showToast('Majority vote wins!','#fde0d8');
+  }
+  document.getElementById('sco').textContent=score;
+  document.getElementById('stk').textContent=streak;
+  updateStars(); updateXP(); draw();
+}
+
+function newRound(){
+  qpt=null; answered=false;
+  document.getElementById('fb').className='fb wait';
+  document.getElementById('fb').textContent='tap the map to reveal mystery tracks';
+  document.getElementById('dl').innerHTML='<span style="color:#7a9a7a">tap the map to begin tracking</span>';
+  setBubble(TALKS.idle); setMouth(true); genPts(); draw();
+}
+
+function setLevel(l){
+  level=l;
+  ['easy','medium','hard'].forEach(function(x){
+    document.getElementById('lb-'+x).classList.toggle('act',x===l);
+  });
+  var cfg=LEVELS[l];
+  document.getElementById('ksl').value=cfg.k;
+  document.getElementById('kv').textContent=cfg.k;
+  document.getElementById('lvltip').textContent=cfg.tip;
+  setBubble(cfg.tip); newRound();
+}
+
+document.getElementById('ksl').addEventListener('input',function(e){
+  document.getElementById('kv').textContent=e.target.value; draw();
+});
+document.getElementById('msel').addEventListener('change',function(){
+  var m=getM(), f=FORMULAS[m];
+  document.getElementById('fml').textContent=f.f;
+  document.getElementById('mtip').textContent=f.tip;
+  document.getElementById('dtip').textContent=f.dtip;
+  draw();
+});
+cv.addEventListener('click',function(e){
+  if(answered){ newRound(); return; }
+  var r=cv.getBoundingClientRect(), sx=cv.width/r.width, sy=cv.height/r.height;
+  qpt={ x:(e.clientX-r.left)*sx, y:(e.clientY-r.top)*sy };
+  document.getElementById('fb').className='fb wait';
+  document.getElementById('fb').textContent='what do those tracks belong to?';
+  setBubble(TALKS.placed); setMouth(true); draw();
+});
+window.addEventListener('resize',function(){
+  clearTimeout(window._rt);
+  window._rt=setTimeout(function(){ resize(); setBannerHeight(); },80);
+});
+
+function resize(){
+  var w=cv.parentElement.clientWidth;
+  cv.width=w; cv.height=Math.round(w*0.56);
+  genPts(); draw();
+}
+
+resize();
+updateXP();
+setBannerHeight();
+</script>
+</body>
+</html>
