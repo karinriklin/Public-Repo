@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS Workflow Guide — neuefische</title>
+<style>
+  :root {
+    --bg:#0f1117;--sidebar:#161b22;--card:#1c2128;--border:#30363d;
+    --accent:#58a6ff;--accent2:#3fb950;--accent3:#f78166;
+    --accent4:#d2a8ff;--accent5:#ffa657;--text:#e6edf3;
+    --muted:#8b949e;--code-bg:#161b22;--tag-bg:#21262d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+  #sidebar{width:260px;min-width:260px;background:var(--sidebar);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;padding:16px 0;}
+  #sidebar h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 16px 8px;}
+  .logo{font-size:15px;font-weight:700;color:var(--accent);padding:0 16px 12px;display:block;}
+  .search-wrap{padding:0 16px 12px;}
+  #searchBox{width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;outline:none;}
+  #searchBox:focus{border-color:var(--accent);}
+  #searchResults{margin-top:6px;}
+  .sr-item{padding:7px 9px;margin-top:4px;border-radius:6px;background:var(--card);border:1px solid var(--border);cursor:pointer;font-size:12px;transition:all .15s;}
+  .sr-item:hover{border-color:var(--accent);}
+  .sr-step{color:var(--accent);font-weight:600;}
+  .sr-where{color:var(--muted);font-size:11px;display:block;margin-top:2px;}
+  .sr-hit{color:var(--accent5);font-weight:600;}
+  .sr-none{color:var(--muted);font-size:11px;padding:6px 2px;}
+  .step-link{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;font-size:13px;color:var(--muted);}
+  .step-link:hover{background:var(--card);color:var(--text);}
+  .step-link.active{border-left-color:var(--accent);color:var(--accent);background:#1f2937;}
+  .step-num{width:22px;height:22px;border-radius:50%;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+  .step-link.active .step-num{background:var(--accent);color:#0f1117;}
+  .sidebar-section{margin-top:8px;border-top:1px solid var(--border);padding-top:8px;}
+  #main{flex:1;padding:40px 56px;max-width:940px;}
+  .section{display:none;}.section.active{display:block;}
+  h1{font-size:30px;font-weight:700;margin-bottom:14px;letter-spacing:-.5px;}
+  /* Step intro banner — the "what you'll do here" line */
+  .subtitle{color:var(--text);font-size:15px;margin-bottom:32px;line-height:1.7;
+    background:#141b27;border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 8px 8px 0;}
+  .subtitle strong{color:var(--accent);}
+  /* Section headings — bigger, with a colored marker bar */
+  h3{font-size:16px;font-weight:700;color:var(--text);margin:40px 0 16px;
+    padding-left:12px;border-left:4px solid var(--accent4);letter-spacing:.2px;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .tab{padding:7px 16px;border-radius:20px;font-size:12.5px;cursor:pointer;border:1px solid var(--border);background:var(--tag-bg);color:var(--muted);transition:all .15s;}
+  .tab:hover{border-color:var(--accent);color:var(--accent);}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#0f1117;font-weight:600;}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+  /* Code blocks — generous spacing between consecutive snippets */
+  .code-block{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;margin:20px 0;overflow:hidden;}
+  /* The label = a clear title describing WHAT the code does */
+  .code-header{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);background:#1b2230;}
+  .code-lang{font-size:13px;color:var(--text);font-weight:600;letter-spacing:.2px;}
+  .code-lang::before{content:"▸ ";color:var(--accent2);font-weight:700;}
+  .copy-btn{font-size:11px;padding:4px 12px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:var(--tag-bg);color:var(--muted);flex-shrink:0;margin-left:12px;}
+  .copy-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .copy-btn.copied{color:var(--accent2);border-color:var(--accent2);}
+  pre{padding:18px;overflow-x:auto;font-size:13px;font-family:'SF Mono','Fira Code',monospace;line-height:1.75;}
+  .kw{color:#ff7b72;}.fn{color:#d2a8ff;}.st{color:#a5d6ff;}.cm{color:#7d97b8;font-style:italic;}.nb{color:#79c0ff;}.num{color:#f2cc60;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:18px 0;}
+  .card p,.card li{font-size:13.5px;color:var(--text);line-height:1.8;}
+  .card ul{padding-left:20px;}
+  .card li{margin-bottom:4px;}
+  .info{border-left:4px solid var(--accent);padding:14px 18px;background:#15212f;border-radius:0 8px 8px 0;margin:18px 0;font-size:13.5px;line-height:1.75;color:var(--text);}
+  .warn{border-left:4px solid var(--accent5);padding:14px 18px;background:#251b0d;border-radius:0 8px 8px 0;margin:18px 0;font-size:13.5px;line-height:1.75;color:var(--text);}
+  .tip{border-left:4px solid var(--accent2);padding:14px 18px;background:#0d2116;border-radius:0 8px 8px 0;margin:18px 0;font-size:13.5px;line-height:1.75;color:var(--text);}
+  .nav-row{display:flex;gap:12px;margin-top:40px;padding-top:24px;border-top:1px solid var(--border);}
+  .nav-btn{padding:8px 18px;border-radius:6px;cursor:pointer;font-size:13px;border:1px solid var(--border);background:var(--tag-bg);color:var(--text);transition:all .15s;}
+  .nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .nav-btn.primary{background:var(--accent);border-color:var(--accent);color:#0f1117;font-weight:600;}
+  .spacer{flex:1;}
+  .checklist{list-style:none;padding:0;}
+  .checklist li{display:flex;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);color:var(--muted);}
+  .checklist li:last-child{border-bottom:none;}
+  .check{color:var(--accent2);flex-shrink:0;}
+  .model-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;}
+  .model-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .15s;}
+  .model-card:hover{border-color:var(--accent);}
+  .model-card h4{font-size:13px;margin-bottom:4px;}
+  .model-card p{font-size:12px;color:var(--muted);}
+  .tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;background:var(--tag-bg);color:var(--muted);margin-top:6px;margin-right:4px;}
+  .tag.green{background:#0d2116;color:var(--accent2);}
+  .tag.blue{background:#1a2332;color:var(--accent);}
+  .tag.orange{background:#2a1f0e;color:var(--accent5);}
+  .decision{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin:12px 0;}
+  .decision p{font-size:13px;margin-bottom:10px;}
+  .decision-btn{display:inline-block;padding:6px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--tag-bg);color:var(--text);font-size:12px;margin:4px;transition:all .15s;}
+  .decision-btn:hover{border-color:var(--accent4);color:var(--accent4);}
+  .decision-result{margin-top:12px;padding:10px 14px;border-radius:6px;background:#1a2332;border:1px solid var(--accent);font-size:13px;display:none;}
+</style>
+</head>
+<body>
+<nav id="sidebar">
+  <span class="logo">🔬 DS Workflow</span>
+  <div class="search-wrap">
+    <input id="searchBox" type="text" placeholder="🔎 Search e.g. 'map', 'ROC', 'outlier'…"
+           oninput="runSearch(this.value)" autocomplete="off">
+    <div id="searchResults"></div>
+  </div>
+  <h2>Steps</h2>
+  <div class="step-link active" onclick="go(0)"><span class="step-num">1</span> Imports</div>
+  <div class="step-link" onclick="go(1)"><span class="step-num">2</span> Load Data</div>
+  <div class="step-link" onclick="go(2)"><span class="step-num">3</span> First Look</div>
+  <div class="step-link" onclick="go(3)"><span class="step-num">4</span> Split First</div>
+  <div class="step-link" onclick="go(4)"><span class="step-num">5</span> EDA</div>
+  <div class="step-link" onclick="go(5)"><span class="step-num">6</span> Clean & Prepare</div>
+  <div class="step-link" onclick="go(6)"><span class="step-num">7</span> Feature Engineering</div>
+  <div class="step-link" onclick="go(7)"><span class="step-num">8</span> Choose a Model</div>
+  <div class="step-link" onclick="go(8)"><span class="step-num">9</span> Baseline Model</div>
+  <div class="step-link" onclick="go(9)"><span class="step-num">10</span> Train & Predict</div>
+  <div class="step-link" onclick="go(10)"><span class="step-num">11</span> Evaluate Metrics</div>
+  <div class="step-link" onclick="go(11)"><span class="step-num">12</span> Tune & Improve</div>
+  <div class="step-link" onclick="go(12)"><span class="step-num">13</span> Final Check</div>
+  <div class="sidebar-section">
+    <h2 style="margin-top:8px">Quick Jump</h2>
+    <div class="step-link" onclick="go(7)"><span class="step-num">↗</span> Pick Model</div>
+    <div class="step-link" onclick="go(8)"><span class="step-num">↗</span> Baseline</div>
+    <div class="step-link" onclick="go(10)"><span class="step-num">↗</span> Metrics</div>
+    <div class="step-link" onclick="go(11)"><span class="step-num">↗</span> GridSearch</div>
+  </div>
+</nav>
+<main id="main">
+
+<!-- ===== 1: IMPORTS ===== -->
+<div class="section active">
+  <h1>1 · Imports</h1>
+  <p class="subtitle">First cell of every notebook. Choose the tab that matches your task.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'imp')">EDA / Regression</div>
+    <div class="tab" onclick="switchTab(this,'imp')">Classification</div>
+    <div class="tab" onclick="switchTab(this,'imp')">Clustering</div>
+    <div class="tab" onclick="switchTab(this,'imp')">Time Series</div>
+    <div class="tab" onclick="switchTab(this,'imp')">NLP</div>
+    <div class="tab" onclick="switchTab(this,'imp')">Deep Learning</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for EDA & regression</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+sns.set_theme(style="darkgrid")
+plt.rcParams["figure.figsize"] = (10, 6)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for classification</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import (classification_report, confusion_matrix,
+                               roc_auc_score, ConfusionMatrixDisplay)
+sns.set_theme(style="darkgrid")</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for clustering</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans, DBSCAN
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for time series</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_absolute_error, mean_squared_error</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for NLP</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import re
+
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from transformers import pipeline, AutoTokenizer, AutoModel  # Phase 4+</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Imports for deep learning</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers, Model
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler</pre></div>
+  </div>
+  <div class="nav-row"><span class="spacer"></span><button class="nav-btn primary" onclick="go(1)">Next: Load Data →</button></div>
+</div>
+
+<!-- ===== 2: LOAD DATA ===== -->
+<div class="section">
+  <h1>2 · Load Data</h1>
+  <p class="subtitle">Get your data into a DataFrame. At this point you have <strong>df</strong> — the full, untouched dataset.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'load')">CSV / File</div>
+    <div class="tab" onclick="switchTab(this,'load')">SQL Database</div>
+    <div class="tab" onclick="switchTab(this,'load')">Multiple Files</div>
+    <div class="tab" onclick="switchTab(this,'load')">Seaborn / Sklearn</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Read a CSV file into a DataFrame</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>DATA_PATH = "data/myfile.csv"    # adjust path
+
+df = pd.read_csv(DATA_PATH)
+
+# Common options:
+df = pd.read_csv(DATA_PATH,
+    sep=",",              # delimiter — use ";" for European CSVs
+    decimal=".",
+    parse_dates=["date_col"],
+    index_col=0           # if first column should be the index
+)
+
+# Excel:
+df = pd.read_excel("file.xlsx", sheet_name="Sheet1")</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">connect</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import sqlalchemy
+
+# PostgreSQL
+engine = sqlalchemy.create_engine(
+    "postgresql://user:password@localhost:5432/dbname"
+)
+# SQLite (local file, no server needed)
+engine = sqlalchemy.create_engine("sqlite:///mydb.sqlite")
+
+# Test the connection
+with engine.connect() as conn:
+    print(conn.execute(sqlalchemy.text("SELECT 1")).scalar())</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">basic query</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Load full table
+df = pd.read_sql_table("table_name", engine)
+
+# Filtered query — always add LIMIT for first exploration
+query = """
+    SELECT *
+    FROM table_name
+    WHERE year >= 2020
+      AND status = 'active'
+    ORDER BY created_at DESC
+    LIMIT 50000
+"""
+df = pd.read_sql(query, engine)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">aggregations & joins</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Aggregate in SQL — faster than pulling all rows then grouping in pandas
+query = """
+    SELECT
+        category,
+        COUNT(*)        AS n,
+        AVG(price)      AS avg_price,
+        STDDEV(price)   AS std_price,
+        MIN(price)      AS min_price,
+        MAX(price)      AS max_price
+    FROM sales
+    GROUP BY category
+    ORDER BY n DESC
+"""
+df_agg = pd.read_sql(query, engine)
+
+# JOIN two tables
+query = """
+    SELECT
+        o.order_id,
+        o.amount,
+        c.name   AS customer_name,
+        c.city
+    FROM orders    o
+    JOIN customers c ON o.customer_id = c.id
+    WHERE o.created_at >= '2024-01-01'
+"""
+df_joined = pd.read_sql(query, engine)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">safe parameterized query</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># NEVER use f-strings with user input — use params (prevents SQL injection)
+from sqlalchemy import text
+
+query = text("""
+    SELECT * FROM products
+    WHERE category = :cat AND price BETWEEN :lo AND :hi
+""")
+df = pd.read_sql(query, engine, params={"cat": "Electronics", "lo": 100, "hi": 500})</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">inspect schema</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sqlalchemy import inspect
+
+inspector = inspect(engine)
+print("Tables:", inspector.get_table_names())
+print("Columns:", inspector.get_columns("table_name"))</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Load & combine many files from a folder</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import glob
+
+# All CSVs in a folder → single DataFrame
+files = glob.glob("data/*.csv")
+df = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+
+# Track which file each row came from
+dfs = []
+for f in files:
+    tmp = pd.read_csv(f)
+    tmp["source_file"] = f
+    dfs.append(tmp)
+df = pd.concat(dfs, ignore_index=True)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Load a built-in practice dataset</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Seaborn built-in datasets
+df = sns.load_dataset("titanic")   # classification
+df = sns.load_dataset("tips")      # regression
+df = sns.load_dataset("penguins")  # classification / clustering
+df = sns.load_dataset("diamonds")  # regression
+
+# Sklearn datasets
+from sklearn.datasets import load_iris, fetch_california_housing
+data = fetch_california_housing(as_frame=True)
+df = data.frame</pre></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(0)">← Imports</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(2)">Next: First Look →</button></div>
+</div>
+
+<!-- ===== 3: FIRST LOOK ===== -->
+<div class="section">
+  <h1>3 · First Look</h1>
+  <p class="subtitle">Quick understanding of the full <strong>df</strong> — shape, types, missing values. Don't modify anything yet.</p>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Check shape & preview the first rows</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Shape and first rows
+print(f"Shape: {df.shape}  — {df.shape[0]} rows, {df.shape[1]} columns")
+df.head(5)</pre></div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">See column types & non-null counts</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Column types and non-null counts
+df.info()</pre></div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Summary statistics for every column</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Summary stats (transposed for readability)
+df.describe(include="all").T</pre></div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Find missing values per column</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Missing values — % per column, only columns with gaps, worst first
+df.isnull().mean().mul(100).round(1).sort_values(ascending=False).loc[lambda s: s > 0]</pre></div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Count duplicates & unique values</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Duplicates and unique values
+print(f"Duplicate rows: {df.duplicated().sum()}")
+df.nunique().sort_values()   # low numbers = likely categorical</pre></div>
+  <ul class="checklist" style="margin-top:16px">
+    <li><span class="check">✓</span> Know the number of rows & columns</li>
+    <li><span class="check">✓</span> Know which columns are numeric / categorical / datetime</li>
+    <li><span class="check">✓</span> Know where missing values are</li>
+    <li><span class="check">✓</span> Identify the target column</li>
+    <li><span class="check">✓</span> Check for duplicates</li>
+  </ul>
+  <div class="nav-row"><button class="nav-btn" onclick="go(1)">← Load Data</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(3)">Next: Split First →</button></div>
+</div>
+
+<!-- ===== 4: SPLIT FIRST ===== -->
+<div class="section">
+  <h1>4 · Split First — Before EDA</h1>
+  <p class="subtitle">Split <strong>before</strong> any EDA or cleaning. Looking at test data during EDA is <strong>data leakage</strong> — the model indirectly "knows" the test set.</p>
+  <div class="warn">⚠ <strong>Data leakage rule:</strong> Everything you learn from EDA (fill values, scaling parameters, outlier thresholds) must come from training data only. The test set must stay completely unseen until the final evaluation step.</div>
+  <h3>Step 1 · Split df into train and test</h3>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Split data into train & test sets</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import train_test_split
+
+TARGET = "price"   # ← set your target column
+
+X = df.drop(columns=[TARGET])   # all features (no target)
+y = df[TARGET]                   # target column only
+
+# 80% train, 20% test — random_state makes it reproducible
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+print(f"X_train: {X_train.shape}  X_test: {X_test.shape}")
+print(f"y_train: {y_train.shape}  y_test: {y_test.shape}")</pre></div>
+  <div class="tip">💡 For classification with imbalanced classes add <code>stratify=y</code> to keep the same class ratio in both sets.</div>
+  <h3>Step 2 · Create df_train — the DataFrame you use for EDA</h3>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Build df_train (X_train + y_train) for EDA</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Combine X_train and y_train into one DataFrame for EDA
+# You need y_train to analyze the target and its correlations with features
+df_train = pd.concat([X_train, y_train], axis=1)
+
+# Confirm it looks right
+print(f"df_train shape: {df_train.shape}")
+df_train.head(3)</pre></div>
+  <div class="card">
+    <p><strong>When to use which object:</strong></p>
+    <ul style="margin-top:8px">
+      <li><strong>df</strong> — only for First Look (step 3) before splitting</li>
+      <li><strong>df_train</strong> = X_train + y_train concatenated → use for all EDA and cleaning decisions</li>
+      <li><strong>X_train</strong> — features only, used for model fitting, scaling, encoding</li>
+      <li><strong>y_train</strong> — target only, used for model fitting</li>
+      <li><strong>X_test / y_test</strong> — never touch until final evaluation (step 11)</li>
+    </ul>
+  </div>
+  <h3>Save the split (optional but recommended)</h3>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Save the split to CSV (reload later)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import os
+os.makedirs("data/splits", exist_ok=True)
+
+# Save to CSV so you can reload without re-running the split
+X_train.to_csv("data/splits/X_train.csv")
+X_test.to_csv("data/splits/X_test.csv")
+y_train.to_csv("data/splits/y_train.csv")
+y_test.to_csv("data/splits/y_test.csv")
+
+# Reload later:
+X_train = pd.read_csv("data/splits/X_train.csv", index_col=0)
+X_test  = pd.read_csv("data/splits/X_test.csv",  index_col=0)
+y_train = pd.read_csv("data/splits/y_train.csv",  index_col=0).squeeze()
+y_test  = pd.read_csv("data/splits/y_test.csv",   index_col=0).squeeze()
+
+# Rebuild df_train from the loaded files
+df_train = pd.concat([X_train, y_train], axis=1)</pre></div>
+
+  <h3>Validation strategy — single split vs K-Fold cross-validation</h3>
+  <div class="info">The held-out test set is touched <strong>only once</strong>, at the very end. To compare models and tune hyperparameters <em>during</em> development, validate <strong>inside X_train</strong> — either with one more split (validation set) or, better, with K-Fold cross-validation.</div>
+  <div class="card">
+    <p><strong>K-Fold cross-validation</strong> splits X_train into K equal parts ("folds"). The model trains on K−1 folds and validates on the remaining one, rotating K times so every fold is used as validation exactly once. The score is the average across folds — a more reliable estimate than a single split, and it uses all training data.</p>
+  </div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">K-Fold (regression / general)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import cross_val_score, KFold
+
+model = LinearRegression()      # any sklearn model
+
+# 5 folds, shuffled — runs ONLY on training data, test set stays untouched
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+scores = cross_val_score(model, X_train, y_train, cv=cv, scoring="r2")
+
+print(f"Fold scores: {scores.round(3)}")
+print(f"Mean R²: {scores.mean():.3f} ± {scores.std():.3f}")
+# Large spread between folds = unstable model (high variance)</pre></div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Stratified K-Fold (classification)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import cross_val_score, StratifiedKFold
+
+# Stratified keeps each fold's class ratio equal to the full set
+# Always use this for classification, especially with imbalanced data
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+scores = cross_val_score(model, X_train, y_train, cv=cv, scoring="roc_auc")
+
+print(f"Fold scores: {scores.round(3)}")
+print(f"Mean ROC-AUC: {scores.mean():.3f} ± {scores.std():.3f}")</pre></div>
+  <div class="tip">💡 GridSearchCV (step 12) uses K-Fold internally via its <code>cv=5</code> argument — so tuning already cross-validates on X_train. The final score is still reported once on X_test.</div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(2)">← First Look</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(4)">Next: EDA →</button></div>
+</div>
+
+<!-- ===== 5: EDA ===== -->
+<div class="section">
+  <h1>5 · EDA</h1>
+  <p class="subtitle">All EDA runs on <strong>df_train</strong> (= X_train + y_train). Never look at X_test or y_test here — that is data leakage.</p>
+
+  <h3>Quick automated report (great starting point)</h3>
+  <div class="info">⚡ <strong>ydata-profiling</strong> generates a full EDA report in one line — distributions, missing values, correlations, duplicates, warnings. Use it for a fast overview, then dig into specifics with the tabs below.</div>
+  <div class="code-block"><div class="code-header"><span class="code-lang">One-line automated EDA report</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Install once:  pip install ydata-profiling
+from ydata_profiling import ProfileReport
+
+# Build the report on the TRAINING data only (avoid leakage)
+profile = ProfileReport(df_train, title="EDA Report")
+
+# Show it inline in the notebook
+profile.to_notebook_iframe()
+
+# Or save it as a standalone HTML file to share / open in a browser
+profile.to_file("eda_report.html")</pre></div>
+  <div class="tip">💡 On big datasets it can be slow — sample first with <code>ProfileReport(df_train.sample(5000), minimal=True)</code>. It complements the manual EDA below; it doesn't replace understanding your data.</div>
+
+  <h3>Manual, focused EDA</h3>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'eda')">Distributions</div>
+    <div class="tab" onclick="switchTab(this,'eda')">Correlations</div>
+    <div class="tab" onclick="switchTab(this,'eda')">Skew Check</div>
+    <div class="tab" onclick="switchTab(this,'eda')">Target Analysis</div>
+    <div class="tab" onclick="switchTab(this,'eda')">Categorical</div>
+    <div class="tab" onclick="switchTab(this,'eda')">Outliers</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">input: df_train</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Histograms for every numeric column in the training set
+df_train.hist(bins=30, figsize=(16, 10))
+plt.suptitle("Feature distributions — training set only")
+plt.tight_layout()
+plt.show()
+
+# Zoom into one column: histogram + boxplot side by side
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+sns.histplot(df_train["col"], kde=True, ax=axes[0])
+sns.boxplot(y=df_train["col"], ax=axes[1])
+axes[0].set_title("Distribution")
+axes[1].set_title("Boxplot")
+plt.show()</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">bar chart: correlation with target</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>TARGET = "price"   # ← your target
+
+# Pearson correlation of every numeric feature with the target
+corr_with_target = (df_train
+    .select_dtypes(include="number")
+    .corr()[TARGET]
+    .drop(TARGET)             # remove the target's self-correlation
+    .sort_values()            # sort low → high for a readable chart
+)
+
+# Horizontal bar chart — green = positive, red = negative correlation
+fig, ax = plt.subplots(figsize=(8, max(4, len(corr_with_target) * 0.4)))
+colors = ["#3fb950" if v > 0 else "#f78166" for v in corr_with_target]
+ax.barh(corr_with_target.index, corr_with_target.values, color=colors)
+ax.axvline(0, color="white", linewidth=0.8)
+ax.set_xlabel("Pearson r")
+ax.set_title(f"Correlation with {TARGET} (training set)")
+plt.tight_layout()
+plt.show()</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">heatmap (upper triangle masked)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>num_df = df_train.select_dtypes(include="number")
+corr = num_df.corr()
+
+# Mask the upper triangle so each pair appears only once
+mask = np.triu(np.ones_like(corr, dtype=bool))
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr, mask=mask, annot=True, fmt=".2f",
+            cmap="coolwarm", center=0, linewidths=0.5, square=True)
+plt.title("Correlation matrix — training set (lower triangle only)")
+plt.show()</pre></div>
+    <div class="info">💡 <code>np.triu</code> masks everything above the diagonal — removes duplicate pairs.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">skewness + distribution curves</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>num_cols = df_train.select_dtypes(include="number").columns
+
+# Skewness score for every numeric column
+skewness = df_train[num_cols].skew().sort_values(ascending=False)
+print(skewness)
+# Rule of thumb: |skew| < 0.5 normal  |0.5–1| moderate  |>1| high
+
+# Plot top 6 most skewed — histogram + KDE + mean/median lines
+cols_to_plot = skewness.abs().sort_values(ascending=False).index[:6]
+fig, axes = plt.subplots(2, 3, figsize=(16, 8))
+for ax, col in zip(axes.flat, cols_to_plot):
+    sns.histplot(df_train[col], kde=True, ax=ax, color="#58a6ff")
+    sk = skewness[col]
+    ax.set_title(f"{col}  skew={sk:.2f}")
+    ax.axvline(df_train[col].mean(),   color="orange", linestyle="--", label="mean")
+    ax.axvline(df_train[col].median(), color="red",    linestyle=":",  label="median")
+    ax.legend(fontsize=8)
+plt.suptitle("Top skewed columns — training set (mean vs median gap shows skew)")
+plt.tight_layout()
+plt.show()
+
+# Fix: log-transform columns with high skew
+# (do this in step 6 on X_train, apply same to X_test)
+for col in skewness[skewness.abs() > 1].index:
+    print(f"Consider log-transform: {col}")</pre></div>
+    <div class="tip">💡 If mean &gt; median → right-skewed (long right tail). Log-transform often fixes it. Always check the target too.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">input: df_train</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>TARGET = "price"   # ← your target
+
+# Distribution of the target
+sns.histplot(df_train[TARGET], kde=True)
+plt.title(f"Distribution of {TARGET} — training set")
+plt.show()
+
+# Scatter: top correlated features vs target
+top_features = (df_train.corr()[TARGET]
+    .abs().sort_values(ascending=False)
+    .index[1:5])   # skip first = target itself
+
+fig, axes = plt.subplots(1, len(top_features), figsize=(16, 4))
+for ax, feat in zip(axes, top_features):
+    sns.scatterplot(data=df_train, x=feat, y=TARGET, alpha=0.4, ax=ax)
+    ax.set_title(feat)
+plt.suptitle(f"Top features vs {TARGET}")
+plt.tight_layout()
+plt.show()</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">input: df_train</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>TARGET = "price"   # ← your target
+
+# Value counts for a categorical column
+df_train["cat_col"].value_counts()
+
+# Bar chart of category frequencies
+sns.countplot(data=df_train, x="cat_col",
+              order=df_train["cat_col"].value_counts().index)
+plt.xticks(rotation=45)
+plt.title("Category distribution — training set")
+plt.show()
+
+# Categorical vs numeric target — see which categories have higher values
+sns.boxplot(data=df_train, x="cat_col", y=TARGET)
+plt.title(f"{TARGET} by category")
+plt.show()</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">detect outliers</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># IQR method — flag outliers in df_train
+def flag_outliers(data, col):
+    Q1, Q3 = data[col].quantile([0.25, 0.75])
+    IQR = Q3 - Q1
+    lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR
+    n_out = ((data[col] < lower) | (data[col] > upper)).sum()
+    print(f"{col}: {n_out} outliers ({n_out/len(data)*100:.1f}%)  bounds=[{lower:.1f}, {upper:.1f}]")
+    return lower, upper
+
+for col in df_train.select_dtypes("number").columns:
+    flag_outliers(df_train, col)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">visualise outliers</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Boxplots for all numeric columns — spots outliers visually
+num_cols = df_train.select_dtypes("number").columns
+fig, axes = plt.subplots(1, len(num_cols), figsize=(len(num_cols)*3, 4))
+for ax, col in zip(axes if len(num_cols) > 1 else [axes], num_cols):
+    ax.boxplot(df_train[col].dropna())
+    ax.set_title(col, fontsize=9)
+plt.suptitle("Boxplots — outliers are dots beyond whiskers")
+plt.tight_layout()
+plt.show()</pre></div>
+    <div class="info">📌 Note down which columns have outliers. You'll handle them in step 6 (Clean).</div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(3)">← Split First</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(5)">Next: Clean & Prepare →</button></div>
+</div>
+
+<!-- ===== 6: CLEAN ===== -->
+<div class="section">
+  <h1>6 · Clean & Prepare</h1>
+  <p class="subtitle">Apply cleaning decisions made during EDA. <strong>Always fit/learn on df_train (or X_train), then apply the same transformation to X_test.</strong></p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'clean')">Missing Values</div>
+    <div class="tab" onclick="switchTab(this,'clean')">Fix Data Types</div>
+    <div class="tab" onclick="switchTab(this,'clean')">Handle Outliers</div>
+    <div class="tab" onclick="switchTab(this,'clean')">Duplicates</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">apply to X_train, mirror on X_test</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Drop rows where TARGET is missing — only in training set
+# (test rows must stay intact for fair evaluation)
+mask_valid = y_train.notna()
+X_train = X_train[mask_valid]
+y_train = y_train[mask_valid]
+
+# Fill numeric with TRAIN median — compute on X_train, apply to both
+train_median = X_train["num_col"].median()        # learned from train
+X_train["num_col"] = X_train["num_col"].fillna(train_median)
+X_test["num_col"]  = X_test["num_col"].fillna(train_median)   # same value!
+
+# Fill categorical with TRAIN mode
+train_mode = X_train["cat_col"].mode()[0]         # learned from train
+X_train["cat_col"] = X_train["cat_col"].fillna(train_mode)
+X_test["cat_col"]  = X_test["cat_col"].fillna(train_mode)
+
+# Drop columns with >50% missing IN TRAIN — then drop same cols in test
+threshold = 0.5
+cols_to_drop = X_train.columns[X_train.isnull().mean() > threshold]
+X_train = X_train.drop(columns=cols_to_drop)
+X_test  = X_test.drop(columns=cols_to_drop)</pre></div>
+    <div class="warn">⚠ Always compute fill values (median, mode) on X_train only. Using the test set to decide fill values leaks information.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Convert columns to the correct dtype</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Convert to numeric (errors → NaN)
+X_train["price"] = pd.to_numeric(X_train["price"], errors="coerce")
+X_test["price"]  = pd.to_numeric(X_test["price"],  errors="coerce")
+
+# Convert to datetime
+X_train["date"] = pd.to_datetime(X_train["date"], format="%Y-%m-%d")
+X_test["date"]  = pd.to_datetime(X_test["date"],  format="%Y-%m-%d")
+
+# Standardize strings — strip whitespace, lowercase
+for col in ["cat_col"]:
+    X_train[col] = X_train[col].str.strip().str.lower()
+    X_test[col]  = X_test[col].str.strip().str.lower()</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">decide strategy from EDA</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># --- Option A: Remove outliers from TRAIN only ---
+# (never remove rows from test — you need all test rows for fair evaluation)
+Q1, Q3 = X_train["col"].quantile([0.25, 0.75])
+IQR = Q3 - Q1
+lower, upper = Q1 - 1.5 * IQR, Q3 + 1.5 * IQR
+mask_clean = (X_train["col"] >= lower) & (X_train["col"] <= upper)
+X_train = X_train[mask_clean]
+y_train = y_train[mask_clean]   # keep y_train in sync with X_train!
+
+# --- Option B: Cap (winsorize) — keep all rows, clip extreme values ---
+# Compute bounds on TRAIN, apply to both
+lower_cap = X_train["col"].quantile(0.01)
+upper_cap = X_train["col"].quantile(0.99)
+X_train["col"] = X_train["col"].clip(lower_cap, upper_cap)
+X_test["col"]  = X_test["col"].clip(lower_cap, upper_cap)  # same bounds!
+
+# --- Option C: Log-transform skewed column ---
+X_train["col_log"] = np.log1p(X_train["col"].clip(lower=0))
+X_test["col_log"]  = np.log1p(X_test["col"].clip(lower=0))</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">plot before vs after (X_train)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>COL = "col"
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+
+# Before
+axes[0, 0].boxplot(df_train[COL].dropna())
+axes[0, 0].set_title(f"{COL} — before (boxplot)")
+sns.histplot(df_train[COL].dropna(), kde=True, ax=axes[0, 1])
+axes[0, 1].set_title(f"{COL} — before (distribution)")
+
+# After (use X_train after cleaning)
+axes[1, 0].boxplot(X_train[COL].dropna())
+axes[1, 0].set_title(f"{COL} — after (boxplot)")
+sns.histplot(X_train[COL].dropna(), kde=True, ax=axes[1, 1], color="#3fb950")
+axes[1, 1].set_title(f"{COL} — after (distribution)")
+
+plt.tight_layout()
+plt.show()</pre></div>
+    <div class="warn">⚠ Never remove rows from X_test. Keep all test rows so evaluation is fair. Option A (remove) only applies to X_train.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Remove duplicate rows from the training set</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Check duplicates in training set
+print(f"X_train before: {len(X_train)}")
+dup_mask = X_train.duplicated()
+X_train = X_train[~dup_mask]
+y_train = y_train[~dup_mask]   # keep in sync!
+print(f"X_train after:  {len(X_train)}")
+
+# X_test: just check, don't drop (keep all test rows)
+print(f"X_test duplicates: {X_test.duplicated().sum()}")</pre></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(4)">← EDA</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(6)">Next: Feature Engineering →</button></div>
+</div>
+
+<!-- ===== 7: FEATURE ENGINEERING ===== -->
+<div class="section">
+  <h1>7 · Feature Engineering</h1>
+  <p class="subtitle">Create and transform features. <strong>Fit everything on X_train only</strong>, then apply (transform) to X_test.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'feat')">Encode Categoricals</div>
+    <div class="tab" onclick="switchTab(this,'feat')">Scale Numerics</div>
+    <div class="tab" onclick="switchTab(this,'feat')">New Features</div>
+    <div class="tab" onclick="switchTab(this,'feat')">Datetime Features</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">binary encoding (0 / 1)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Replace two values with 0 and 1 directly
+# Use when a column has exactly two meaningful values (yes/no, male/female, etc.)
+X_train["is_smoker"] = X_train["smoker"].map({"yes": 1, "no": 0})
+X_test["is_smoker"]  = X_test["smoker"].map({"yes": 1, "no": 0})
+
+# Or with replace:
+X_train["sex"] = X_train["sex"].replace({"male": 1, "female": 0})
+X_test["sex"]  = X_test["sex"].replace({"male": 1, "female": 0})
+
+# If already True/False — cast to int directly
+X_train["is_weekend"] = X_train["is_weekend"].astype(int)
+X_test["is_weekend"]  = X_test["is_weekend"].astype(int)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">.map() / .replace() to swap values for other values</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># .map() — replace each value using a dictionary {old: new}
+# Works for any value→value mapping, not just 0/1
+mapping = {"low": 1, "medium": 2, "high": 3}
+X_train["level"] = X_train["level"].map(mapping)
+X_test["level"]  = X_test["level"].map(mapping)
+# ⚠ .map() turns values NOT in the dict into NaN
+
+# .replace() — like map, but leaves unlisted values unchanged
+X_train["country"] = X_train["country"].replace({"USA": "United States",
+                                                  "UK": "United Kingdom"})
+
+# Map to text labels too (e.g. for readable plots)
+X_train["season"] = X_train["month"].map({12: "Winter", 1: "Winter", 2: "Winter",
+                                          3: "Spring", 4: "Spring", 5: "Spring",
+                                          6: "Summer", 7: "Summer", 8: "Summer",
+                                          9: "Autumn", 10: "Autumn", 11: "Autumn"})
+
+# Apply a function to every value with .map() or .apply()
+X_train["price_k"] = X_train["price"].map(lambda x: x / 1000)</pre></div>
+    <div class="tip">💡 <strong>map vs replace:</strong> <code>.map()</code> replaces from a dict and sets anything missing to NaN — good for full recoding. <code>.replace()</code> only swaps the keys you list and leaves the rest untouched.</div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">one-hot encoding (nominal, no order)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># pd.get_dummies — apply to train, then align test to same columns
+X_train = pd.get_dummies(X_train, columns=["cat_col"], drop_first=True)
+X_test  = pd.get_dummies(X_test,  columns=["cat_col"], drop_first=True)
+
+# Align: test may have fewer categories → add missing cols as 0
+X_test = X_test.reindex(columns=X_train.columns, fill_value=0)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">ordinal encoding (ordered categories)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.preprocessing import OrdinalEncoder
+
+order = [["low", "medium", "high"]]   # explicit order
+enc = OrdinalEncoder(categories=order)
+
+# Fit on X_train, transform both
+X_train[["cat_col"]] = enc.fit_transform(X_train[["cat_col"]])
+X_test[["cat_col"]]  = enc.transform(X_test[["cat_col"]])</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">fit on X_train, transform both</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.preprocessing import StandardScaler
+
+num_cols = X_train.select_dtypes(include="number").columns
+
+# StandardScaler: mean=0, std=1 — use with linear models, SVM, KNN
+scaler = StandardScaler()
+X_train[num_cols] = scaler.fit_transform(X_train[num_cols])  # learn + apply
+X_test[num_cols]  = scaler.transform(X_test[num_cols])       # apply only!
+
+# MinMaxScaler [0,1] — use with neural networks instead
+# scaler = MinMaxScaler()
+# X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
+# X_test[num_cols]  = scaler.transform(X_test[num_cols])</pre></div>
+    <div class="warn">⚠ Never call <code>fit_transform</code> on X_test. Calling <code>fit</code> on test data leaks its statistics into the scaler.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">apply to X_train and X_test</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Create same feature in both sets
+for df in [X_train, X_test]:
+    df["price_per_sqm"] = df["price"] / df["area"]
+    df["age"]           = 2024 - df["year_built"]
+
+# Bin continuous feature (use TRAIN bins for both)
+_, bin_edges = pd.cut(X_train["age"], bins=4, retbins=True)
+X_train["age_group"] = pd.cut(X_train["age"], bins=bin_edges, labels=False)
+X_test["age_group"]  = pd.cut(X_test["age"],  bins=bin_edges, labels=False)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Extract datetime parts (year, month, weekday…)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>for df in [X_train, X_test]:
+    df["date"]        = pd.to_datetime(df["date"])
+    df["year"]        = df["date"].dt.year
+    df["month"]       = df["date"].dt.month
+    df["day_of_week"] = df["date"].dt.dayofweek   # 0=Monday
+    df["is_weekend"]  = (df["date"].dt.dayofweek >= 5).astype(int)
+    df["quarter"]     = df["date"].dt.quarter</pre></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(5)">← Clean</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(7)">Next: Choose Model →</button></div>
+</div>
+
+<!-- ===== 8: CHOOSE MODEL ===== -->
+<div class="section">
+  <h1>8 · Choose a Model</h1>
+  <p class="subtitle">Pick the right algorithm before training. You'll set a baseline in step 9 before fitting the real model.</p>
+  <h3>What kind of problem is this?</h3>
+  <div class="decision">
+    <p>Click to identify your problem type:</p>
+    <button class="decision-btn" onclick="showDec('reg')">Target is a continuous number (price, temperature…)</button>
+    <button class="decision-btn" onclick="showDec('clf')">Target is a category / class (yes/no, A/B/C…)</button>
+    <button class="decision-btn" onclick="showDec('clu')">No target — I want to find groups</button>
+    <div class="decision-result" id="dec-reg">→ <strong>Regression.</strong> Start with Linear Regression as baseline. Add Ridge/Lasso if you have many features. Try Random Forest for non-linear patterns.</div>
+    <div class="decision-result" id="dec-clf">→ <strong>Classification.</strong> Start with Logistic Regression as baseline. Try Random Forest or KNN next. Use stratify=y in your split.</div>
+    <div class="decision-result" id="dec-clu">→ <strong>Clustering.</strong> Use K-Means if you can estimate the number of clusters (elbow method). DBSCAN for arbitrary shapes. Reduce dimensions with PCA first.</div>
+  </div>
+  <h3>Algorithm cheat sheet</h3>
+  <div class="model-grid">
+    <div class="model-card"><h4>Linear Regression</h4><p>Fast, interpretable. Needs linear relationship. Good baseline for regression.</p><span class="tag green">Regression</span><span class="tag blue">Interpretable</span></div>
+    <div class="model-card"><h4>Logistic Regression</h4><p>Classification baseline. Outputs probabilities. Works well when data is roughly linearly separable.</p><span class="tag green">Classification</span><span class="tag blue">Interpretable</span></div>
+    <div class="model-card"><h4>K-Nearest Neighbors</h4><p>No training step. Slow on large data. Always scale first.</p><span class="tag green">Both</span><span class="tag orange">Scale required</span></div>
+    <div class="model-card"><h4>Decision Tree</h4><p>Handles non-linearity. Very interpretable. Overfits easily — set max_depth.</p><span class="tag green">Both</span><span class="tag blue">No scaling</span></div>
+    <div class="model-card"><h4>Random Forest</h4><p>Ensemble of trees. Robust, rarely overfits badly. Great default choice.</p><span class="tag green">Both</span><span class="tag blue">No scaling</span></div>
+    <div class="model-card"><h4>Ridge / Lasso</h4><p>Linear model + regularization. Ridge shrinks coefficients. Lasso zeroes them out (feature selection).</p><span class="tag green">Regression</span><span class="tag orange">Scale required</span></div>
+    <div class="model-card"><h4>SVM</h4><p>Strong for high-dimensional data. Slower to train. Kernel trick for non-linearity.</p><span class="tag green">Both</span><span class="tag orange">Scale required</span></div>
+    <div class="model-card"><h4>K-Means</h4><p>Clustering. Set k with elbow method. Assumes spherical clusters.</p><span class="tag green">Clustering</span><span class="tag orange">Scale required</span></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(6)">← Feature Engineering</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(8)">Next: Baseline Model →</button></div>
+</div>
+
+<!-- ===== 9: BASELINE MODEL ===== -->
+<div class="section">
+  <h1>9 · Baseline Model</h1>
+  <p class="subtitle">Before training any real model, establish a baseline — the score a <em>dumb</em> model achieves with no learning. Your real model must beat this to be worth using.</p>
+  <div class="info">📌 <strong>Why?</strong> If your fancy model gets 80% accuracy but always predicting the majority class gets 79%, your model adds almost no value. The baseline sets the bar.</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'base')">Classification Baseline</div>
+    <div class="tab" onclick="switchTab(this,'base')">Regression Baseline</div>
+    <div class="tab" onclick="switchTab(this,'base')">Heuristic Baseline</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">input: X_train, y_train, X_test, y_test</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.dummy import DummyClassifier
+from sklearn.metrics import classification_report, accuracy_score
+
+# "most_frequent": always predicts the most common class
+# "stratified": randomly predicts classes proportionally to their frequency
+dummy = DummyClassifier(strategy="most_frequent", random_state=42)
+dummy.fit(X_train, y_train)           # learns only the class distribution
+y_pred_dummy = dummy.predict(X_test)
+
+print("=== BASELINE (most frequent class) ===")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_dummy):.3f}")
+print(classification_report(y_test, y_pred_dummy))
+
+# Also check: what is the class distribution in y_train?
+print("\nClass distribution in training set:")
+print(y_train.value_counts(normalize=True).round(3))</pre></div>
+    <div class="tip">💡 If the majority class is 90% of data, a model that always predicts that class gets 90% accuracy — your real model needs to clearly beat this.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">input: X_train, y_train, X_test, y_test</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.dummy import DummyRegressor
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+# "mean": always predicts the mean of y_train
+# "median": always predicts the median (more robust to outliers)
+dummy = DummyRegressor(strategy="mean")
+dummy.fit(X_train, y_train)
+y_pred_dummy = dummy.predict(X_test)
+
+rmse_baseline = mean_squared_error(y_test, y_pred_dummy, squared=False)
+mae_baseline  = mean_absolute_error(y_test, y_pred_dummy)
+r2_baseline   = r2_score(y_test, y_pred_dummy)   # will be 0.0 or negative for "mean"
+
+print("=== BASELINE (predict mean) ===")
+print(f"RMSE: {rmse_baseline:.2f}")
+print(f"MAE:  {mae_baseline:.2f}")
+print(f"R²:   {r2_baseline:.3f}   (should be ~0 for mean predictor)")
+print(f"\nMean of y_train: {y_train.mean():.2f}")
+print(f"Std  of y_train: {y_train.std():.2f}")</pre></div>
+    <div class="tip">💡 A DummyRegressor with strategy="mean" gives R²≈0. Your real model's R² must be meaningfully higher than 0 to add value.</div>
+  </div>
+  <div class="tab-content">
+    <div class="info">🧠 A <strong>heuristic baseline</strong> uses domain knowledge / EDA findings instead of a dummy. It's a simple hand-written rule. If your ML model can't beat a sensible rule, the complexity isn't justified. Great when you have business understanding of the problem.</div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">rule based on EDA / domain knowledge</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Example: from EDA we saw older + low-income people tend to have poor health.
+# Write that intuition as a simple rule and use it as a baseline.
+def heuristic_baseline(row):
+    if row["age"] > 54 and row["income"] <= 25000:
+        return 1          # poor health (the class we care about)
+    else:
+        return 0          # good health
+
+# Apply the rule to the TEST set (no training needed — it's a fixed rule)
+y_pred_heur = X_test.apply(heuristic_baseline, axis=1)
+
+from sklearn.metrics import roc_auc_score, classification_report
+print("=== HEURISTIC BASELINE ===")
+print(classification_report(y_test, y_pred_heur))
+print(f"ROC-AUC: {roc_auc_score(y_test, y_pred_heur):.3f}")
+# Your ML model should clearly beat this score</pre></div>
+    <div class="card"><p><strong>How to choose a baseline:</strong></p><ul style="margin-top:6px">
+      <li>An existing model already in production → use it as the bar to beat</li>
+      <li>A standard benchmark others use for this problem → match it for comparison</li>
+      <li>Nothing exists → write a simple heuristic from your EDA, or use DummyClassifier/Regressor</li>
+    </ul></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(7)">← Choose Model</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(9)">Next: Train & Predict →</button></div>
+</div>
+
+<!-- ===== 10: TRAIN ===== -->
+<div class="section">
+  <h1>10 · Train & Predict</h1>
+  <p class="subtitle"><strong>model.fit(X_train, y_train)</strong> only. <strong>model.predict(X_test)</strong> for evaluation. Never fit on X_test.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'train')">Regression</div>
+    <div class="tab" onclick="switchTab(this,'train')">Classification</div>
+    <div class="tab" onclick="switchTab(this,'train')">Decision Tree</div>
+    <div class="tab" onclick="switchTab(this,'train')">Clustering</div>
+    <div class="tab" onclick="switchTab(this,'train')">Pipeline</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Train regression models (Linear, Ridge, Random Forest)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.ensemble import RandomForestRegressor
+
+# 1. Simple linear regression (baseline-level model)
+lr = LinearRegression()
+lr.fit(X_train, y_train)          # learn from training data
+y_pred = lr.predict(X_test)       # predict on unseen test data
+
+# 2. Ridge (L2 regularization — prevents overfitting with many features)
+ridge = Ridge(alpha=1.0)
+ridge.fit(X_train, y_train)
+
+# 3. Random Forest (handles non-linear patterns, no scaling needed)
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+y_pred = rf.predict(X_test)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Train classification models (LogReg, Random Forest, KNN)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
+# 1. Logistic Regression — interpretable, fast, good first real model
+log_reg = LogisticRegression(max_iter=1000, random_state=42)
+log_reg.fit(X_train, y_train)
+y_pred = log_reg.predict(X_test)
+y_prob = log_reg.predict_proba(X_test)[:, 1]  # probabilities for class=1
+
+# 2. Random Forest — strong default, no scaling needed
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+y_pred = rf.predict(X_test)
+
+# 3. KNN — always scale X_train/X_test first (done in step 7)
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="info">🌳 A decision tree builds a flowchart of yes/no questions on feature values. At each split it picks the feature + threshold that most reduces <strong>Gini impurity</strong>. Trees handle non-linear patterns and need no scaling. Works for both classification and regression.</div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">classifier</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.tree import DecisionTreeClassifier
+
+# Unlimited depth → grows until leaves are pure → almost always OVERFITS
+tree = DecisionTreeClassifier(random_state=42)
+tree.fit(X_train, y_train)
+
+# Check tree size — huge depth / many nodes is a sign of overfitting
+print(f"Nodes: {tree.tree_.node_count},  max depth: {tree.tree_.max_depth}")
+print(f"~{X_train.shape[0] / tree.tree_.node_count:.1f} samples per node")
+
+# Limit depth to generalize better (less overfitting, slightly less train accuracy)
+tree = DecisionTreeClassifier(max_depth=5, random_state=42)
+tree.fit(X_train, y_train)
+y_pred = tree.predict(X_test)
+y_prob = tree.predict_proba(X_test)[:, 1]   # leaf class fractions</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">regressor</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.tree import DecisionTreeRegressor
+
+# Predicts the mean target value of the leaf a sample falls into
+dtr = DecisionTreeRegressor(max_depth=5, random_state=42)
+dtr.fit(X_train, y_train)
+y_pred = dtr.predict(X_test)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">visualize the tree</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.tree import plot_tree
+
+plt.figure(figsize=(20, 10))
+plot_tree(tree,
+          max_depth=3,                       # show only top 3 levels (readable)
+          feature_names=X_train.columns,
+          class_names=tree.classes_.astype(str),
+          filled=True, rounded=True)
+plt.title("Decision Tree (top 3 levels)")
+plt.show()
+# Each node shows: the split question, gini, samples, value=[class counts], class</pre></div>
+    <div class="warn">⚠ <strong>Overfitting:</strong> a full-grown tree reaches 100% train accuracy but generalizes poorly. Always limit complexity (next: step 12 hyperparameters). <strong>Extrapolation:</strong> trees still predict confidently outside the range of training data — be cautious there.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">K-Means clustering with the elbow method</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.cluster import KMeans
+
+# Elbow method on X_train — find optimal number of clusters
+inertias = []
+k_range = range(1, 11)
+for k in k_range:
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_train)
+    inertias.append(km.inertia_)
+
+plt.plot(k_range, inertias, "bo-")
+plt.xlabel("k"); plt.ylabel("Inertia"); plt.title("Elbow Method — X_train")
+plt.show()
+
+# Fit with chosen k, assign labels
+km = KMeans(n_clusters=3, random_state=42, n_init=10)
+X_train["cluster"] = km.fit_predict(X_train)  # fit + label train
+X_test["cluster"]  = km.predict(X_test)        # label test (no fit!)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">scaler + model in one object (no leakage)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+# Pipeline: scaler and model combined — fit() on pipeline does both steps
+# Prevents any data leakage because scaling is part of the same CV fold
+pipe = Pipeline([
+    ("scaler", StandardScaler()),
+    ("model",  LogisticRegression(max_iter=1000))
+])
+
+pipe.fit(X_train, y_train)         # scaler fits on X_train, then model fits
+y_pred = pipe.predict(X_test)      # scaler transforms X_test, then predicts
+
+# Works directly with GridSearchCV:
+# param_grid = {"model__C": [0.01, 0.1, 1, 10]}</pre></div>
+    <div class="tip">💡 Pipelines are the cleanest way to combine preprocessing + model — especially when doing cross-validation.</div>
+
+    <div class="info">🔧 <strong>Mental model:</strong> a Pipeline is just a named list of steps. The step <strong>names</strong> (here "scaler" and "model") are the handles you use to change things. That's why everything uses the <code>stepname__param</code> syntax — step name + double underscore + parameter.</div>
+
+    <div class="code-block"><div class="code-header"><span class="code-lang">Change a setting after building it — set_params()</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Don't rebuild the whole pipeline — just poke the one setting, then refit
+pipe.set_params(model__C=10)                      # change C on the "model" step
+
+# Change several at once (even across different steps)
+pipe.set_params(
+    model__C=0.1,
+    model__class_weight="balanced",
+    scaler__with_mean=False                       # a param on the "scaler" step
+)
+
+pipe.fit(X_train, y_train)                         # refit after changing params</pre></div>
+
+    <div class="code-block"><div class="code-header"><span class="code-lang">Find the valid names you can change</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># Lists EVERY tunable "stepname__param" string — your cheat sheet of what's allowed
+pipe.get_params().keys()
+
+# Inspect the actual objects inside
+pipe.named_steps                  # dict of all steps
+pipe.named_steps["model"]         # the model object itself
+pipe["model"].C                   # read a current value
+
+# Nested pipelines? each "__" goes one level deeper, e.g.:
+# preprocessor__num__imputer__strategy = "mean"</pre></div>
+
+    <div class="code-block"><div class="code-header"><span class="code-lang">Swap out the whole model step</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.neighbors import KNeighborsClassifier
+
+# Option A — rebuild, reusing the same preprocessing steps
+pipe_knn = Pipeline([
+    ("scaler", StandardScaler()),       # reuse identical preprocessing
+    ("model",  KNeighborsClassifier())  # only the model changed
+])
+
+# Option B — replace the step object in place
+pipe.set_params(model=KNeighborsClassifier())
+pipe.fit(X_train, y_train)</pre></div>
+
+    <div class="info">🔗 <strong>GridSearchCV is just set_params() on repeat.</strong> It calls <code>set_params(model__C=...)</code> for every combination, then hands back the best fully-assembled pipeline as <code>grid.best_estimator_</code>. Read its choices with <code>grid.best_estimator_.named_steps["model"].C</code>.</div>
+
+    <div class="tip">⚡ <strong>Workflow:</strong> build once → tweak with <code>set_params(step__param=value)</code> → <code>fit</code> again. You almost never edit a <em>fitted</em> pipeline by hand — you change params and refit. Use <code>get_params().keys()</code> whenever you forget a name.</div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(8)">← Baseline</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(10)">Next: Evaluate Metrics →</button></div>
+</div>
+
+<!-- ===== 11: METRICS ===== -->
+<div class="section">
+  <h1>11 · Evaluate Metrics</h1>
+  <p class="subtitle">Always evaluate on <strong>X_test / y_test</strong> (data the model never saw). Also check train metrics to spot overfitting.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'met')">Regression</div>
+    <div class="tab" onclick="switchTab(this,'met')">Classification</div>
+    <div class="tab" onclick="switchTab(this,'met')">Confusion Matrix</div>
+    <div class="tab" onclick="switchTab(this,'met')">ROC / AUC</div>
+    <div class="tab" onclick="switchTab(this,'met')">Feature Importance</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Regression metrics: MAE, RMSE, R²</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+
+# Evaluate on TEST set
+mae  = mean_absolute_error(y_test, y_pred)
+rmse = mean_squared_error(y_test, y_pred, squared=False)
+r2   = r2_score(y_test, y_pred)
+
+# Also check TRAIN score to detect overfitting
+y_pred_train = model.predict(X_train)
+r2_train = r2_score(y_train, y_pred_train)
+
+print(f"Train R²: {r2_train:.3f}  |  Test R²: {r2:.3f}")
+print(f"  → gap of {r2_train - r2:.3f}  (large gap = overfitting)")
+print(f"MAE:  {mae:.2f}   RMSE: {rmse:.2f}")
+
+# Residual plot — check if errors are random (no pattern = good)
+residuals = y_test - y_pred
+plt.scatter(y_pred, residuals, alpha=0.4)
+plt.axhline(0, color="red", linestyle="--")
+plt.xlabel("Predicted"); plt.ylabel("Residuals")
+plt.title("Residual plot — random scatter = good model")
+plt.show()</pre></div>
+    <div class="card"><ul>
+      <li><strong>MAE</strong>: average error in original units — easy to interpret</li>
+      <li><strong>RMSE</strong>: penalises large errors more — use when big errors are costly</li>
+      <li><strong>R²</strong>: proportion of variance explained — 1.0 = perfect, 0 = no better than mean</li>
+    </ul></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Classification metrics: precision, recall, F1</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import classification_report, accuracy_score
+
+# Full report: precision, recall, F1 per class
+print(classification_report(y_test, y_pred))
+
+# Compare train vs test accuracy to check for overfitting
+acc_train = accuracy_score(y_train, model.predict(X_train))
+acc_test  = accuracy_score(y_test,  y_pred)
+print(f"Train accuracy: {acc_train:.3f}  |  Test accuracy: {acc_test:.3f}")
+print(f"  → gap: {acc_train - acc_test:.3f}  (>0.05 suggests overfitting)")</pre></div>
+    <div class="card"><ul>
+      <li><strong>Accuracy</strong>: overall correct — misleading when classes are imbalanced</li>
+      <li><strong>Precision</strong>: of all positive predictions, how many were actually positive</li>
+      <li><strong>Recall</strong>: of all actual positives, how many did we catch</li>
+      <li><strong>F1</strong>: harmonic mean of precision and recall — best metric for imbalanced classes</li>
+    </ul></div>
+    <div class="warn">⚠ If classes are imbalanced (e.g. 95%/5%), accuracy is meaningless. Use F1, precision, recall, or AUC-ROC instead.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Plot the confusion matrix</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import ConfusionMatrixDisplay
+
+fig, ax = plt.subplots(figsize=(6, 5))
+ConfusionMatrixDisplay.from_predictions(
+    y_test, y_pred,
+    display_labels=model.classes_,
+    colorbar=False, ax=ax
+)
+plt.title("Confusion Matrix")
+plt.show()</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">normalized (best for imbalanced data)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre># normalize="true" → each row sums to 100%
+# Shows what % of each true class was predicted correctly — clearer when imbalanced
+fig, ax = plt.subplots(figsize=(6, 5))
+ConfusionMatrixDisplay.from_predictions(
+    y_test, y_pred,
+    display_labels=model.classes_,
+    normalize="true",        # row-normalized
+    values_format=".2f",
+    colorbar=False, ax=ax
+)
+plt.title("Confusion Matrix (normalized by true class)")
+plt.show()</pre></div>
+    <div class="card"><ul>
+      <li><strong>True Positive (TP)</strong>: correctly predicted positive</li>
+      <li><strong>False Positive (FP)</strong>: predicted positive, actually negative (Type I error)</li>
+      <li><strong>False Negative (FN)</strong>: predicted negative, actually positive (Type II error)</li>
+      <li><strong>True Negative (TN)</strong>: correctly predicted negative</li>
+    </ul></div>
+    <div class="info">📌 <strong>Error analysis:</strong> look at where the model fails. Many false negatives = low recall (missing positives). Use this to decide if the model is usable, or where to improve.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Plot the ROC curve & AUC</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import roc_curve, roc_auc_score
+
+y_prob = model.predict_proba(X_test)[:, 1]   # probability of class=1
+fpr, tpr, _ = roc_curve(y_test, y_prob)
+auc = roc_auc_score(y_test, y_prob)
+
+plt.plot(fpr, tpr, label=f"Model  AUC={auc:.3f}")
+plt.plot([0,1],[0,1],"k--", label="Random baseline  AUC=0.5")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.show()</pre></div>
+    <div class="info">AUC = 0.5 → random. AUC = 1.0 → perfect. AUC &gt; 0.8 → good model.</div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">tree-based models</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>importances = rf.feature_importances_
+feat_df = (pd.DataFrame({"feature": X_train.columns, "importance": importances})
+           .sort_values("importance", ascending=False))
+
+sns.barplot(data=feat_df.head(15), x="importance", y="feature")
+plt.title("Feature Importances (Random Forest)")
+plt.show()</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">linear models</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>coef_df = (pd.DataFrame({"feature": X_train.columns, "coef": lr.coef_})
+           .sort_values("coef", key=abs, ascending=False))
+print(coef_df.head(10))</pre></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(9)">← Train</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(11)">Next: Tune & Improve →</button></div>
+</div>
+
+<!-- ===== 12: TUNE ===== -->
+<div class="section">
+  <h1>12 · Tune & Improve</h1>
+  <p class="subtitle">GridSearchCV cross-validates on <strong>X_train</strong> only. Final score always reported on <strong>X_test</strong>.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'tune')">GridSearchCV</div>
+    <div class="tab" onclick="switchTab(this,'tune')">RandomizedSearch</div>
+    <div class="tab" onclick="switchTab(this,'tune')">Tree Hyperparameters</div>
+    <div class="tab" onclick="switchTab(this,'tune')">Imbalanced Data</div>
+    <div class="tab" onclick="switchTab(this,'tune')">Regularization</div>
+    <div class="tab" onclick="switchTab(this,'tune')">Bias vs Variance</div>
+  </div>
+  <div class="tab-content active">
+    <div class="code-block"><div class="code-header"><span class="code-lang">uses X_train only</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    "n_estimators": [50, 100, 200],
+    "max_depth":    [None, 5, 10],
+    "min_samples_split": [2, 5]
+}
+
+grid_search = GridSearchCV(
+    RandomForestClassifier(random_state=42),
+    param_grid,
+    cv=5,             # 5-fold cross-validation inside X_train
+    scoring="f1",     # or "accuracy", "r2", "neg_root_mean_squared_error"
+    n_jobs=-1,        # use all CPU cores
+    verbose=1
+)
+grid_search.fit(X_train, y_train)   # only X_train — never pass X_test here!
+
+print("Best params:", grid_search.best_params_)
+print("Best CV score (train folds):", grid_search.best_score_)
+
+# Now evaluate best model on the held-out test set
+best_model = grid_search.best_estimator_
+y_pred = best_model.predict(X_test)
+print("Test score:", accuracy_score(y_test, y_pred))</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">faster for large grids</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint
+
+param_dist = {
+    "n_estimators": randint(50, 500),
+    "max_depth":    [None, 5, 10, 20],
+    "max_features": ["sqrt", "log2"]
+}
+
+rand_search = RandomizedSearchCV(
+    RandomForestClassifier(random_state=42),
+    param_dist,
+    n_iter=30,          # try 30 random combos instead of all
+    cv=5, scoring="f1", n_jobs=-1, random_state=42
+)
+rand_search.fit(X_train, y_train)
+print(rand_search.best_params_)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="info">🌳 These hyperparameters control tree complexity → they fight overfitting. A full-grown tree memorizes the training data; limiting it helps generalization.</div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">pruning a decision tree / random forest</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    "max_depth":         [3, 5, 10, None],   # max levels — None = unlimited (overfits)
+    "min_samples_split": [2, 10, 50],        # min samples to allow a split
+    "min_samples_leaf":  [1, 5, 20],         # min samples in a leaf node
+    "max_leaf_nodes":    [None, 10, 50],     # cap total leaves
+    "min_impurity_decrease": [0.0, 0.001],   # only split if it helps enough
+    "criterion":         ["gini", "entropy"] # splitting quality measure
+}
+
+grid = GridSearchCV(DecisionTreeClassifier(random_state=42),
+                    param_grid, cv=5, scoring="roc_auc", n_jobs=-1)
+grid.fit(X_train, y_train)
+print("Best params:", grid.best_params_)
+
+best_tree = grid.best_estimator_
+# Compare train vs test to confirm overfitting is reduced
+from sklearn.metrics import roc_auc_score
+print("Train AUC:", roc_auc_score(y_train, best_tree.predict_proba(X_train)[:,1]))
+print("Test  AUC:", roc_auc_score(y_test,  best_tree.predict_proba(X_test)[:,1]))</pre></div>
+    <div class="card"><ul>
+      <li><strong>max_depth</strong> — how deep the tree grows. Lower = simpler, less overfit</li>
+      <li><strong>min_samples_split / min_samples_leaf</strong> — require more data per split/leaf</li>
+      <li><strong>max_leaf_nodes</strong> — hard cap on number of leaves</li>
+      <li><strong>min_impurity_decrease</strong> — only split if Gini drops enough</li>
+      <li><strong>criterion</strong> — "gini" or "entropy" measure how good a split is</li>
+    </ul></div>
+  </div>
+  <div class="tab-content">
+    <div class="warn">⚠ Imbalanced data (e.g. 85% / 15%) breaks accuracy and biases models toward the majority class. Spot it in EDA with <code>y_train.value_counts(normalize=True)</code>.</div>
+    <div class="card"><p><strong>How to handle imbalance:</strong></p><ul style="margin-top:6px">
+      <li><strong>Stratify the split</strong> — <code>train_test_split(..., stratify=y)</code> keeps class ratios equal in train/test</li>
+      <li><strong>Right metric</strong> — never accuracy. Use F1, recall, precision, or ROC-AUC</li>
+      <li><strong>class_weight</strong> — tell the model to pay more attention to the minority class</li>
+      <li><strong>Threshold tuning</strong> — adjust the 0.5 decision cutoff to favor recall or precision</li>
+    </ul></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">class_weight</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.tree import DecisionTreeClassifier
+
+# "balanced" auto-weights classes inversely to their frequency
+# → minority class errors count more during training
+tree = DecisionTreeClassifier(class_weight="balanced", max_depth=5, random_state=42)
+tree.fit(X_train, y_train)
+
+# Works the same for LogisticRegression and RandomForestClassifier:
+# LogisticRegression(class_weight="balanced", max_iter=1000)
+# RandomForestClassifier(class_weight="balanced", random_state=42)</pre></div>
+    <div class="code-block"><div class="code-header"><span class="code-lang">ROC-AUC: the right metric for imbalance</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import roc_auc_score
+
+# ROC-AUC = probability the model ranks a random positive above a random negative.
+# 0.5 = random, 1.0 = perfect. Handles imbalance well, threshold-independent.
+y_prob = tree.predict_proba(X_test)[:, 1]
+print(f"ROC-AUC: {roc_auc_score(y_test, y_prob):.3f}")</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">Regularization: Ridge, Lasso & best alpha</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.linear_model import Ridge, Lasso, RidgeCV
+
+# Ridge (L2) — shrinks all coefficients, none become exactly 0
+ridge = Ridge(alpha=1.0)   # higher alpha = stronger penalty
+
+# Lasso (L1) — zeroes out unimportant features (automatic feature selection)
+lasso = Lasso(alpha=0.1)
+
+# Find best alpha automatically with cross-validation on X_train
+ridge_cv = RidgeCV(alphas=[0.01, 0.1, 1, 10, 100])
+ridge_cv.fit(X_train, y_train)
+print("Best alpha:", ridge_cv.alpha_)</pre></div>
+  </div>
+  <div class="tab-content">
+    <div class="code-block"><div class="code-header"><span class="code-lang">learning curve</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.model_selection import learning_curve
+
+sizes, train_scores, val_scores = learning_curve(
+    model, X_train, y_train, cv=5,
+    train_sizes=np.linspace(0.1, 1.0, 8)
+)
+
+plt.plot(sizes, train_scores.mean(axis=1), label="Train score")
+plt.plot(sizes, val_scores.mean(axis=1),   label="CV score")
+plt.xlabel("Training set size"); plt.ylabel("Score")
+plt.title("Learning curve")
+plt.legend(); plt.show()</pre></div>
+    <div class="card"><ul>
+      <li><strong>Underfitting (high bias)</strong>: Train AND test score are low. → Use more complex model, add features, reduce regularization.</li>
+      <li><strong>Overfitting (high variance)</strong>: Train score high, test score low. → Add regularization, reduce complexity, get more data.</li>
+      <li><strong>Good fit</strong>: Train ≈ Test score, both acceptably high.</li>
+    </ul></div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(10)">← Metrics</button><span class="spacer"></span><button class="nav-btn primary" onclick="go(12)">Next: Final Check →</button></div>
+</div>
+
+<!-- ===== 13: FINAL CHECK ===== -->
+<div class="section">
+  <h1>13 · Final Check</h1>
+  <p class="subtitle">Before calling it done — make sure the workflow is solid end-to-end.</p>
+  <h3>Checklist</h3>
+  <ul class="checklist">
+    <li><span class="check">✓</span> Split was done BEFORE EDA — test data never seen during exploration</li>
+    <li><span class="check">✓</span> EDA was only on df_train (X_train + y_train)</li>
+    <li><span class="check">✓</span> Fill values, scaling, encoding all fitted on X_train only</li>
+    <li><span class="check">✓</span> Baseline model established and real model beats it</li>
+    <li><span class="check">✓</span> Train/test metric gap checked (no overfitting)</li>
+    <li><span class="check">✓</span> Metrics match the business problem (not just accuracy)</li>
+    <li><span class="check">✓</span> Feature importances reviewed — any surprises?</li>
+    <li><span class="check">✓</span> random_state set everywhere for reproducibility</li>
+  </ul>
+  <h3>Compare multiple models</h3>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Compare several models side by side</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>from sklearn.metrics import r2_score
+
+models = {
+    "Dummy (baseline)": DummyRegressor(strategy="mean"),
+    "Linear Regression": LinearRegression(),
+    "Ridge":             Ridge(alpha=1.0),
+    "Random Forest":     RandomForestRegressor(n_estimators=100, random_state=42),
+}
+
+results = []
+for name, m in models.items():
+    m.fit(X_train, y_train)
+    train_r2 = r2_score(y_train, m.predict(X_train))
+    test_r2  = r2_score(y_test,  m.predict(X_test))
+    results.append({"model": name, "train_r2": round(train_r2,3), "test_r2": round(test_r2,3)})
+
+pd.DataFrame(results).sort_values("test_r2", ascending=False)</pre></div>
+  <h3>Save the best model</h3>
+  <div class="code-block"><div class="code-header"><span class="code-lang">Save & reload the trained model</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div><pre>import joblib
+
+joblib.dump(best_model, "models/best_model.joblib")
+
+# Reload later
+model = joblib.load("models/best_model.joblib")
+y_pred = model.predict(X_new)</pre></div>
+  <h3>Jump back to any step</h3>
+  <div class="tabs" style="flex-wrap:wrap">
+    <div class="tab" onclick="go(0)">1 · Imports</div>
+    <div class="tab" onclick="go(1)">2 · Load</div>
+    <div class="tab" onclick="go(2)">3 · First Look</div>
+    <div class="tab" onclick="go(3)">4 · Split</div>
+    <div class="tab" onclick="go(4)">5 · EDA</div>
+    <div class="tab" onclick="go(5)">6 · Clean</div>
+    <div class="tab" onclick="go(6)">7 · Features</div>
+    <div class="tab" onclick="go(7)">8 · Model</div>
+    <div class="tab" onclick="go(8)">9 · Baseline</div>
+    <div class="tab" onclick="go(9)">10 · Train</div>
+    <div class="tab" onclick="go(10)">11 · Metrics</div>
+    <div class="tab" onclick="go(11)">12 · Tune</div>
+  </div>
+  <div class="nav-row"><button class="nav-btn" onclick="go(11)">← Tune</button><span class="spacer"></span><button class="nav-btn" onclick="go(0)">↑ Start over</button></div>
+</div>
+
+</main>
+<script>
+const sections = document.querySelectorAll('.section');
+const stepLinks = document.querySelectorAll('#sidebar .step-link');
+
+function go(i) {
+  sections.forEach((s,j) => s.classList.toggle('active', j===i));
+  stepLinks.forEach((l,j) => l.classList.toggle('active', j===i));
+  window.scrollTo(0,0);
+}
+
+function switchTab(el, group) {
+  const parent = el.parentElement;
+  const tabs = parent.querySelectorAll('.tab');
+  const contents = parent.parentElement.querySelectorAll('.tab-content');
+  const idx = Array.from(tabs).indexOf(el);
+  tabs.forEach((t,i) => t.classList.toggle('active', i===idx));
+  contents.forEach((c,i) => c.classList.toggle('active', i===idx));
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function showDec(key) {
+  document.querySelectorAll('.decision-result').forEach(el => el.style.display = 'none');
+  const el = document.getElementById('dec-' + key);
+  if (el) el.style.display = 'block';
+}
+
+// ---------- SEARCH ----------
+// Build an index: per section → title, full text, and each tab (label + content text)
+const searchIndex = Array.from(sections).map((sec, i) => {
+  const title = (sec.querySelector('h1') || {}).textContent || ('Step ' + i);
+  const tabEls = sec.querySelectorAll('.tabs .tab');
+  const contentEls = sec.querySelectorAll('.tab-content');
+  const areas = [];
+  tabEls.forEach((t, ti) => {
+    const content = contentEls[ti];
+    if (!content) return;  // skip non-tab "jump" buttons (e.g. Final Check)
+    areas.push({
+      label: t.textContent.trim(),
+      tabIndex: ti,
+      text: (t.textContent + ' ' + content.textContent).toLowerCase()
+    });
+  });
+  return { i, title: title.trim(), fullText: sec.textContent.toLowerCase(), areas };
+});
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildMatcher(q) {
+  // Whole-"word" matcher: query bordered by anything that isn't a letter/digit
+  // so "roc" matches "ROC" and "roc_auc_score" but NOT "preprocessing".
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Anchor only the START of the word, so "outlier" matches "outliers",
+  // "roc" matches "roc_auc_score", but "roc" does NOT match "preprocessing".
+  const word = new RegExp('(?:^|[^a-z0-9])' + esc);
+  return {
+    word: t => word.test(t),
+    sub:  t => t.includes(q)
+  };
+}
+
+function runSearch(q) {
+  q = q.trim().toLowerCase();
+  const box = document.getElementById('searchResults');
+  if (q.length < 2) { box.innerHTML = ''; return; }
+
+  const m = buildMatcher(q);
+  // Prefer whole-word matches; if none anywhere, fall back to substring
+  let test = m.word;
+  const anyWord = searchIndex.some(e => m.word(e.fullText));
+  if (!anyWord) test = m.sub;
+
+  const results = [];
+  searchIndex.forEach(entry => {
+    if (!test(entry.fullText)) return;
+    const hitAreas = entry.areas.filter(a => test(a.text));
+    if (hitAreas.length) {
+      hitAreas.forEach(a => results.push({ i: entry.i, title: entry.title, where: a.label, tabIndex: a.tabIndex }));
+    } else {
+      results.push({ i: entry.i, title: entry.title, where: null, tabIndex: -1 });
+    }
+  });
+
+  if (!results.length) {
+    box.innerHTML = '<div class="sr-none">No matches for "' + escapeHtml(q) + '"</div>';
+    return;
+  }
+  box.innerHTML = results.map(r =>
+    '<div class="sr-item" onclick="goToHit(' + r.i + ',' + r.tabIndex + ')">' +
+      '<span class="sr-step">' + escapeHtml(r.title) + '</span>' +
+      (r.where ? '<span class="sr-where">tab: <span class="sr-hit">' + escapeHtml(r.where) + '</span></span>' : '') +
+    '</div>'
+  ).join('');
+}
+
+function goToHit(i, tabIndex) {
+  go(i);
+  if (tabIndex >= 0) {
+    const tabs = sections[i].querySelectorAll('.tabs .tab');
+    if (tabs[tabIndex]) tabs[tabIndex].click();
+  }
+}
+</script>
+</body>
+</html>
